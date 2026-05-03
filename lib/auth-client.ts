@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 
-const BEARER_TOKEN_STORAGE_KEY = "bearer_token";
+import { BEARER_TOKEN_STORAGE_KEY } from "@/lib/auth-constants";
 
 export const authClient = createAuthClient({
   fetchOptions: {
