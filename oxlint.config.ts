@@ -8,6 +8,10 @@ export default defineConfig({
       name: "tailwindcss",
       specifier: "eslint-plugin-tailwindcss",
     },
+    {
+      name: "react-doctor",
+      specifier: "react-doctor/oxlint-plugin",
+    },
   ],
   settings: {
     tailwindcss: {

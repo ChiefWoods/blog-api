@@ -1,0 +1,9 @@
+{
+  "ignore": {
+    "files": [
+      "components/ui/**",
+      ".next/**",
+      "node_modules/**"
+    ]
+  }
+}
