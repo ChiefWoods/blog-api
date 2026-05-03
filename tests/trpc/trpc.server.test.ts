@@ -28,6 +28,21 @@ function createMockContext(overrides?: Partial<Record<string, unknown>>) {
   };
 }
 
+function authenticatedUser(overrides?: Partial<Record<string, unknown>>) {
+  return {
+    id: "user-1",
+    name: "Reader",
+    username: "reader",
+    email: "reader@example.com",
+    emailVerified: true,
+    image: null,
+    isAdmin: false,
+    createdAt: new Date("2026-05-03T00:00:00.000Z"),
+    updatedAt: new Date("2026-05-03T00:00:00.000Z"),
+    ...overrides,
+  };
+}
+
 describe("tRPC procedures", () => {
   it("returns published posts with cursor pagination", async () => {
     const ctx = createMockContext();
@@ -62,6 +77,30 @@ describe("tRPC procedures", () => {
     );
   });
 
+  it("returns admin post list with cursor pagination", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser({ isAdmin: true }),
+      isAuthenticated: true,
+      isAdmin: true,
+    });
+
+    const p1 = { id: "p1", title: "A", slug: "a" };
+    const p2 = { id: "p2", title: "B", slug: "b" };
+    const p3 = { id: "p3", title: "C", slug: "c" };
+    ctx.prisma.post.findMany.mockResolvedValue([p1, p2, p3]);
+
+    const caller = appRouter.createCaller(ctx as never);
+    const result = await caller.post.listAll({ limit: 2 });
+
+    expect(result.items).toEqual([p1, p2]);
+    expect(result.nextCursor).toBe("p2");
+    expect(ctx.prisma.post.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: 3,
+      }),
+    );
+  });
+
   it("throws NOT_FOUND when a published post slug does not exist", async () => {
     const ctx = createMockContext();
     ctx.prisma.post.findFirst.mockResolvedValue(null);
@@ -85,17 +124,7 @@ describe("tRPC procedures", () => {
 
   it("allows authenticated users to create comments", async () => {
     const ctx = createMockContext({
-      user: {
-        id: "user-1",
-        name: "Reader",
-        username: "reader",
-        email: "reader@example.com",
-        emailVerified: true,
-        image: null,
-        isAdmin: false,
-        createdAt: new Date("2026-05-03T00:00:00.000Z"),
-        updatedAt: new Date("2026-05-03T00:00:00.000Z"),
-      },
+      user: authenticatedUser(),
       isAuthenticated: true,
     });
 
@@ -128,19 +157,23 @@ describe("tRPC procedures", () => {
     );
   });
 
+  it("rejects comment creation for unpublished or missing posts", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser(),
+      isAuthenticated: true,
+    });
+
+    ctx.prisma.post.findFirst.mockResolvedValue(null);
+
+    const caller = appRouter.createCaller(ctx as never);
+    await expect(caller.comment.create({ postId: "ghost", body: "Nope" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
   it("blocks admin post procedures for non-admin users", async () => {
     const ctx = createMockContext({
-      user: {
-        id: "user-1",
-        name: "Reader",
-        username: "reader",
-        email: "reader@example.com",
-        emailVerified: true,
-        image: null,
-        isAdmin: false,
-        createdAt: new Date("2026-05-03T00:00:00.000Z"),
-        updatedAt: new Date("2026-05-03T00:00:00.000Z"),
-      },
+      user: authenticatedUser(),
       isAuthenticated: true,
       isAdmin: false,
     });
@@ -151,5 +184,132 @@ describe("tRPC procedures", () => {
       code: "FORBIDDEN",
     } satisfies Partial<TRPCError>);
     expect(ctx.prisma.post.findMany).not.toHaveBeenCalled();
+  });
+
+  it("enforces zod input validation for listPublished", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx as never);
+
+    await expect(caller.post.listPublished({ limit: 0 })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("enforces zod input validation for comment.create body", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser(),
+      isAuthenticated: true,
+    });
+    const caller = appRouter.createCaller(ctx as never);
+
+    await expect(caller.comment.create({ postId: "post-1", body: "   " })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("enforces zod input validation for post.create fields", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser({ isAdmin: true }),
+      isAuthenticated: true,
+      isAdmin: true,
+    });
+
+    const caller = appRouter.createCaller(ctx as never);
+
+    await expect(
+      caller.post.create({
+        title: "",
+        slug: "",
+        contentJson: {},
+        published: false,
+      }),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("sets publishedAt when publishing", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser({ isAdmin: true }),
+      isAuthenticated: true,
+      isAdmin: true,
+    });
+
+    ctx.prisma.post.update.mockResolvedValue({
+      id: "post-1",
+      published: true,
+      publishedAt: new Date(),
+    });
+    const caller = appRouter.createCaller(ctx as never);
+
+    await caller.post.publish({ id: "post-1" });
+
+    expect(ctx.prisma.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "post-1" },
+        data: expect.objectContaining({
+          published: true,
+          publishedAt: expect.any(Date),
+        }),
+      }),
+    );
+  });
+
+  it("clears publishedAt when unpublishing", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser({ isAdmin: true }),
+      isAuthenticated: true,
+      isAdmin: true,
+    });
+
+    ctx.prisma.post.update.mockResolvedValue({ id: "post-1", published: false, publishedAt: null });
+    const caller = appRouter.createCaller(ctx as never);
+
+    await caller.post.unpublish({ id: "post-1" });
+
+    expect(ctx.prisma.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "post-1" },
+        data: {
+          published: false,
+          publishedAt: null,
+        },
+      }),
+    );
+  });
+
+  it("propagates duplicate slug errors from database layer", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser({ isAdmin: true }),
+      isAuthenticated: true,
+      isAdmin: true,
+    });
+
+    ctx.prisma.post.create.mockRejectedValue(
+      new Error("Unique constraint failed on fields: (`slug`)"),
+    );
+    const caller = appRouter.createCaller(ctx as never);
+
+    await expect(
+      caller.post.create({
+        title: "Duplicate",
+        slug: "duplicate",
+        contentJson: {},
+        published: false,
+      }),
+    ).rejects.toThrow(/Unique constraint failed/);
+  });
+
+  it("propagates relation errors from database layer on comment delete", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser({ isAdmin: true }),
+      isAuthenticated: true,
+      isAdmin: true,
+    });
+
+    ctx.prisma.comment.delete.mockRejectedValue(new Error("Record to delete does not exist."));
+    const caller = appRouter.createCaller(ctx as never);
+
+    await expect(caller.comment.delete({ id: "missing" })).rejects.toThrow(/does not exist/);
   });
 });
