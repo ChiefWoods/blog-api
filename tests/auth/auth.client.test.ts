@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { BEARER_TOKEN_STORAGE_KEY } from "@/lib/auth-constants";
 
 type AuthClientConfig = {
   fetchOptions?: {
@@ -23,14 +25,20 @@ vi.mock("better-auth/react", () => ({
 }));
 
 describe("lib/auth-client.ts", () => {
+  let importedModule: Awaited<typeof import("@/lib/auth-client")>;
+  let options: AuthClientConfig;
+
+  beforeAll(async () => {
+    importedModule = await import("@/lib/auth-client");
+    options = createAuthClientMock.mock.calls[0]?.[0] as AuthClientConfig;
+  });
+
   beforeEach(() => {
-    vi.resetModules();
-    createAuthClientMock.mockClear();
     vi.unstubAllGlobals();
   });
 
-  it("creates auth client with bearer auth transport", async () => {
-    const { authClient, signIn, signOut, signUp, useSession } = await import("@/lib/auth-client");
+  it("creates auth client with bearer auth transport", () => {
+    const { authClient, signIn, signOut, signUp, useSession } = importedModule;
 
     expect(authClient).toBeDefined();
     expect(signIn).toBeDefined();
@@ -39,12 +47,11 @@ describe("lib/auth-client.ts", () => {
     expect(useSession).toBeDefined();
 
     expect(createAuthClientMock).toHaveBeenCalledTimes(1);
-    const options = createAuthClientMock.mock.calls[0]?.[0] as AuthClientConfig;
     expect(options.fetchOptions?.auth?.type).toBe("Bearer");
     expect(typeof options.fetchOptions?.auth?.token).toBe("function");
   });
 
-  it("stores bearer token from set-auth-token header and reuses it for auth token", async () => {
+  it("stores bearer token from set-auth-token header and reuses it for auth token", () => {
     const storage = new Map<string, string>();
     const localStorageMock = {
       getItem: (key: string) => storage.get(key) ?? null,
@@ -58,8 +65,6 @@ describe("lib/auth-client.ts", () => {
     });
     vi.stubGlobal("localStorage", localStorageMock);
 
-    await import("@/lib/auth-client");
-    const options = createAuthClientMock.mock.calls[0]?.[0] as AuthClientConfig;
     const onSuccess = options.fetchOptions?.onSuccess;
     const tokenGetter = options.fetchOptions?.auth?.token;
 
@@ -74,7 +79,7 @@ describe("lib/auth-client.ts", () => {
       },
     });
 
-    expect(storage.get("bearer_token")).toBe("abc.def.ghi");
+    expect(storage.get(BEARER_TOKEN_STORAGE_KEY)).toBe("abc.def.ghi");
     expect(tokenGetter?.()).toBe("abc.def.ghi");
   });
 });

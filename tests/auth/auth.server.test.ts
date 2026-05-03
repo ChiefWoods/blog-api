@@ -31,7 +31,6 @@ vi.mock("@/lib/prisma", () => ({
 
 describe("lib/auth.ts", () => {
   beforeEach(() => {
-    vi.resetModules();
     betterAuthMock.mockClear();
     prismaAdapterMock.mockClear();
     nextCookiesMock.mockClear();
