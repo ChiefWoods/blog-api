@@ -1,9 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fetchRequestHandlerMock, createTRPCContextMock } = vi.hoisted(() => ({
-  fetchRequestHandlerMock: vi.fn(),
-  createTRPCContextMock: vi.fn(),
-}));
+const fetchRequestHandlerMock = vi.fn();
+const createTRPCContextMock = vi.fn();
 
 vi.mock("@trpc/server/adapters/fetch", () => ({
   fetchRequestHandler: fetchRequestHandlerMock,
