@@ -16,24 +16,12 @@ export async function createTRPCContext({ req }: CreateTRPCContextOptions) {
     session = null;
   }
 
-  const user = session?.user
-    ? await prisma.user.findUnique({
-        where: {
-          id: session.user.id,
-        },
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          email: true,
-          emailVerified: true,
-          image: true,
-          isAdmin: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      })
-    : null;
+  const user = session?.user ?? null;
+  const isAdmin =
+    typeof user === "object" &&
+    user !== null &&
+    "isAdmin" in user &&
+    Boolean((user as { isAdmin?: boolean }).isAdmin);
 
   return {
     req,
@@ -41,7 +29,7 @@ export async function createTRPCContext({ req }: CreateTRPCContextOptions) {
     session: session?.session ?? null,
     user,
     isAuthenticated: Boolean(user),
-    isAdmin: Boolean(user?.isAdmin),
+    isAdmin,
   };
 }
 

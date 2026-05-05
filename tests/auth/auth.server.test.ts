@@ -7,7 +7,6 @@ const prismaAdapterMock = vi.fn((prisma: unknown, options: unknown) => ({
   options,
 }));
 const nextCookiesMock = vi.fn(() => ({ id: "next-cookies-plugin" }));
-const bearerMock = vi.fn(() => ({ id: "bearer-plugin" }));
 
 vi.mock("better-auth", () => ({
   betterAuth: betterAuthMock,
@@ -19,10 +18,7 @@ vi.mock("better-auth/adapters/prisma", () => ({
 
 vi.mock("better-auth/next-js", () => ({
   nextCookies: nextCookiesMock,
-}));
-
-vi.mock("better-auth/plugins/bearer", () => ({
-  bearer: bearerMock,
+  toNextJsHandler: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -34,10 +30,9 @@ describe("lib/auth.ts", () => {
     betterAuthMock.mockClear();
     prismaAdapterMock.mockClear();
     nextCookiesMock.mockClear();
-    bearerMock.mockClear();
   });
 
-  it("configures better-auth with prisma adapter and bearer + next-cookies plugins", async () => {
+  it("configures better-auth with prisma adapter and stateless cookie-cache sessions", async () => {
     const { auth } = await import("@/lib/auth");
 
     expect(auth).toBeDefined();
@@ -45,18 +40,49 @@ describe("lib/auth.ts", () => {
       { id: "mock-prisma-client" },
       { provider: "postgresql" },
     );
-    expect(bearerMock).toHaveBeenCalledTimes(1);
     expect(nextCookiesMock).toHaveBeenCalledTimes(1);
     expect(betterAuthMock).toHaveBeenCalledTimes(1);
 
     const call = betterAuthMock.mock.calls[0]?.[0] as {
       plugins: Array<{ id: string }>;
+      database: {
+        kind: string;
+        prisma: unknown;
+        options: { provider: string };
+      };
       emailAndPassword: { enabled: boolean };
       socialProviders: Record<string, { clientId: string; clientSecret: string }>;
+      account: {
+        storeStateStrategy: string;
+        storeAccountCookie: boolean;
+      };
+      session: {
+        cookieCache: {
+          enabled: boolean;
+          strategy: string;
+          maxAge: number;
+          refreshCache: boolean;
+        };
+      };
     };
 
     expect(call.emailAndPassword.enabled).toBe(true);
-    expect(call.plugins).toEqual([{ id: "bearer-plugin" }, { id: "next-cookies-plugin" }]);
+    expect(call.database).toEqual({
+      kind: "prisma-adapter",
+      prisma: { id: "mock-prisma-client" },
+      options: { provider: "postgresql" },
+    });
+    expect(call.plugins).toEqual([{ id: "next-cookies-plugin" }]);
+    expect(call.account).toEqual({
+      storeStateStrategy: "cookie",
+      storeAccountCookie: true,
+    });
+    expect(call.session.cookieCache).toEqual({
+      enabled: true,
+      strategy: "jwt",
+      maxAge: 7 * 24 * 60 * 60,
+      refreshCache: true,
+    });
     expect(Object.keys(call.socialProviders)).toEqual(["google", "apple", "twitter", "discord"]);
   });
 });

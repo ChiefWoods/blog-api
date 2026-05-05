@@ -6,6 +6,7 @@ const toNextJsHandlerMock = vi.fn();
 
 vi.mock("better-auth/next-js", () => ({
   toNextJsHandler: toNextJsHandlerMock,
+  nextCookies: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({

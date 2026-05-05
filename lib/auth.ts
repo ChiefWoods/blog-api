@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { bearer } from "better-auth/plugins/bearer";
 
 import { prisma } from "@/lib/prisma";
 
@@ -30,5 +29,17 @@ export const auth = betterAuth({
       clientSecret: process.env.DISCORD_CLIENT_SECRET as string,
     },
   },
-  plugins: [bearer(), nextCookies()],
+  session: {
+    cookieCache: {
+      enabled: true,
+      strategy: "jwt",
+      maxAge: 7 * 24 * 60 * 60,
+      refreshCache: true,
+    },
+  },
+  account: {
+    storeStateStrategy: "cookie",
+    storeAccountCookie: true,
+  },
+  plugins: [nextCookies()],
 });

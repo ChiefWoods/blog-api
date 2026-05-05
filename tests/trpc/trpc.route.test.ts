@@ -91,6 +91,7 @@ describe("/api/trpc/[trpc] route", () => {
 
     expect(handlerArg.endpoint).toBe("/api/trpc");
     expect(handlerArg.req).toBe(req);
+    expect(typeof handlerArg.createContext).toBe("function");
 
     await handlerArg.createContext();
     expect(createTRPCContextMock).toHaveBeenCalledWith({ req });

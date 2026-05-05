@@ -1,14 +1,8 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-
-import { BEARER_TOKEN_STORAGE_KEY } from "@/lib/auth-constants";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 type AuthClientConfig = {
   fetchOptions?: {
-    onSuccess?: (ctx: { response: { headers: { get: (name: string) => string | null } } }) => void;
-    auth?: {
-      type: string;
-      token?: () => string;
-    };
+    credentials?: string;
   };
 };
 
@@ -33,11 +27,7 @@ describe("lib/auth-client.ts", () => {
     options = createAuthClientMock.mock.calls[0]?.[0] as AuthClientConfig;
   });
 
-  beforeEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("creates auth client with bearer auth transport", () => {
+  it("creates auth client with cookie credentials transport", () => {
     const { authClient, signIn, signOut, signUp, useSession } = importedModule;
 
     expect(authClient).toBeDefined();
@@ -47,39 +37,6 @@ describe("lib/auth-client.ts", () => {
     expect(useSession).toBeDefined();
 
     expect(createAuthClientMock).toHaveBeenCalledTimes(1);
-    expect(options.fetchOptions?.auth?.type).toBe("Bearer");
-    expect(typeof options.fetchOptions?.auth?.token).toBe("function");
-  });
-
-  it("stores bearer token from set-auth-token header and reuses it for auth token", () => {
-    const storage = new Map<string, string>();
-    const localStorageMock = {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => {
-        storage.set(key, value);
-      },
-    };
-
-    vi.stubGlobal("window", {
-      localStorage: localStorageMock,
-    });
-    vi.stubGlobal("localStorage", localStorageMock);
-
-    const onSuccess = options.fetchOptions?.onSuccess;
-    const tokenGetter = options.fetchOptions?.auth?.token;
-
-    expect(onSuccess).toBeTypeOf("function");
-    expect(tokenGetter).toBeTypeOf("function");
-
-    onSuccess?.({
-      response: {
-        headers: {
-          get: (name: string) => (name === "set-auth-token" ? "abc.def.ghi" : null),
-        },
-      },
-    });
-
-    expect(storage.get(BEARER_TOKEN_STORAGE_KEY)).toBe("abc.def.ghi");
-    expect(tokenGetter?.()).toBe("abc.def.ghi");
+    expect(options.fetchOptions?.credentials).toBe("include");
   });
 });
