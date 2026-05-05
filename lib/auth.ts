@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { username } from "better-auth/plugins";
 
+import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
 import { prisma } from "@/lib/prisma";
 
 export const auth = betterAuth({
@@ -34,5 +35,11 @@ export const auth = betterAuth({
     storeStateStrategy: "cookie",
     storeAccountCookie: true,
   },
-  plugins: [username(), nextCookies()],
+  plugins: [
+    username({
+      minUsernameLength: USERNAME_MIN_LENGTH,
+      maxUsernameLength: USERNAME_MAX_LENGTH,
+    }),
+    nextCookies(),
+  ],
 });
