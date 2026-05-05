@@ -7,6 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -132,6 +133,12 @@ export function SignInForm() {
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
       </Button>
+
+      <SocialAuthButtons
+        callbackURL={callbackURL}
+        mode="sign-in"
+        disabled={form.formState.isSubmitting}
+      />
 
       <p className="text-sm text-muted-foreground">
         Need an account?{" "}
