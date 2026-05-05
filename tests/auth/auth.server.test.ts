@@ -89,6 +89,6 @@ describe("lib/auth.ts", () => {
       maxAge: 7 * 24 * 60 * 60,
       refreshCache: true,
     });
-    expect(Object.keys(call.socialProviders)).toEqual(["google", "apple", "twitter", "discord"]);
+    expect(Object.keys(call.socialProviders)).toEqual(["twitter", "discord"]);
   });
 });
