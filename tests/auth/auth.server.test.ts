@@ -7,6 +7,7 @@ const prismaAdapterMock = vi.fn((prisma: unknown, options: unknown) => ({
   options,
 }));
 const nextCookiesMock = vi.fn(() => ({ id: "next-cookies-plugin" }));
+const usernameMock = vi.fn(() => ({ id: "username-plugin" }));
 
 vi.mock("better-auth", () => ({
   betterAuth: betterAuthMock,
@@ -20,6 +21,9 @@ vi.mock("better-auth/next-js", () => ({
   nextCookies: nextCookiesMock,
   toNextJsHandler: vi.fn(),
 }));
+vi.mock("better-auth/plugins", () => ({
+  username: usernameMock,
+}));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: { id: "mock-prisma-client" },
@@ -30,9 +34,10 @@ describe("lib/auth.ts", () => {
     betterAuthMock.mockClear();
     prismaAdapterMock.mockClear();
     nextCookiesMock.mockClear();
+    usernameMock.mockClear();
   });
 
-  it("configures better-auth with prisma adapter and stateless cookie-cache sessions", async () => {
+  it("configures better-auth with prisma adapter, username plugin, and stateless cookie-cache sessions", async () => {
     const { auth } = await import("@/lib/auth");
 
     expect(auth).toBeDefined();
@@ -41,6 +46,7 @@ describe("lib/auth.ts", () => {
       { provider: "postgresql" },
     );
     expect(nextCookiesMock).toHaveBeenCalledTimes(1);
+    expect(usernameMock).toHaveBeenCalledTimes(1);
     expect(betterAuthMock).toHaveBeenCalledTimes(1);
 
     const call = betterAuthMock.mock.calls[0]?.[0] as {
@@ -72,7 +78,7 @@ describe("lib/auth.ts", () => {
       prisma: { id: "mock-prisma-client" },
       options: { provider: "postgresql" },
     });
-    expect(call.plugins).toEqual([{ id: "next-cookies-plugin" }]);
+    expect(call.plugins).toEqual([{ id: "username-plugin" }, { id: "next-cookies-plugin" }]);
     expect(call.account).toEqual({
       storeStateStrategy: "cookie",
       storeAccountCookie: true,

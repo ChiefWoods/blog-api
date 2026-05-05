@@ -1,11 +1,13 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 type AuthClientConfig = {
+  plugins?: Array<{ id: string }>;
   fetchOptions?: {
     credentials?: string;
   };
 };
 
+const usernameClientMock = vi.fn(() => ({ id: "username-client-plugin" }));
 const createAuthClientMock = vi.fn((config?: AuthClientConfig) => ({
   __config: config,
   signIn: vi.fn(),
@@ -16,6 +18,9 @@ const createAuthClientMock = vi.fn((config?: AuthClientConfig) => ({
 
 vi.mock("better-auth/react", () => ({
   createAuthClient: createAuthClientMock,
+}));
+vi.mock("better-auth/client/plugins", () => ({
+  usernameClient: usernameClientMock,
 }));
 
 describe("lib/auth-client.ts", () => {
@@ -37,6 +42,8 @@ describe("lib/auth-client.ts", () => {
     expect(useSession).toBeDefined();
 
     expect(createAuthClientMock).toHaveBeenCalledTimes(1);
+    expect(usernameClientMock).toHaveBeenCalledTimes(1);
+    expect(options.plugins).toEqual([{ id: "username-client-plugin" }]);
     expect(options.fetchOptions?.credentials).toBe("include");
   });
 });
