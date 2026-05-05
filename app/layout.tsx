@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Merriweather } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
+import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-svh flex-col">
         <ThemeProvider>
+          <Header />
           <main className="flex flex-1">{children}</main>
           <Toaster richColors closeButton />
         </ThemeProvider>
