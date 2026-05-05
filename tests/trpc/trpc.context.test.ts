@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionMock = vi.fn();
+const getIsAdminByUserIdMock = vi.fn();
 
 vi.mock("@/lib/auth", () => ({
   auth: {
@@ -8,6 +9,7 @@ vi.mock("@/lib/auth", () => ({
       getSession: getSessionMock,
     },
   },
+  getIsAdminByUserId: getIsAdminByUserIdMock,
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -17,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
 describe("createTRPCContext", () => {
   beforeEach(() => {
     getSessionMock.mockReset();
+    getIsAdminByUserIdMock.mockReset();
   });
 
   it("returns unauthenticated context when session lookup fails", async () => {
@@ -37,9 +40,9 @@ describe("createTRPCContext", () => {
         id: "user-1",
         name: "Admin",
         email: "admin@example.com",
-        isAdmin: true,
       },
     });
+    getIsAdminByUserIdMock.mockResolvedValue(true);
 
     const { createTRPCContext } = await import("@/src/trpc/context");
     const req = new Request("http://localhost/api/trpc");
@@ -58,9 +61,9 @@ describe("createTRPCContext", () => {
         id: "user-1",
         name: "Reader",
         email: "reader@example.com",
-        isAdmin: false,
       },
     });
+    getIsAdminByUserIdMock.mockResolvedValue(false);
 
     const { createTRPCContext } = await import("@/src/trpc/context");
     const ctx = await createTRPCContext({ req: new Request("http://localhost/api/trpc") });

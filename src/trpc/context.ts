@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth, getIsAdminByUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 type CreateTRPCContextOptions = {
@@ -17,11 +17,15 @@ export async function createTRPCContext({ req }: CreateTRPCContextOptions) {
   }
 
   const user = session?.user ?? null;
-  const isAdmin =
+  const userId =
+    user &&
     typeof user === "object" &&
-    user !== null &&
-    "isAdmin" in user &&
-    Boolean((user as { isAdmin?: boolean }).isAdmin);
+    "id" in user &&
+    typeof (user as { id?: unknown }).id === "string"
+      ? ((user as { id: string }).id as string)
+      : null;
+
+  const isAdmin = userId ? await getIsAdminByUserId(userId) : false;
 
   return {
     req,

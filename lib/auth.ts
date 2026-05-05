@@ -68,11 +68,50 @@ export const auth = betterAuth({
   ],
 });
 
+function getUserId(user: unknown) {
+  if (
+    user &&
+    typeof user === "object" &&
+    "id" in user &&
+    typeof (user as { id?: unknown }).id === "string"
+  ) {
+    return (user as { id: string }).id;
+  }
+
+  return null;
+}
+
+export async function getIsAdminByUserId(userId: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isAdmin: true },
+    });
+    return Boolean(user?.isAdmin);
+  } catch {
+    return false;
+  }
+}
+
 export async function getServerSession() {
   try {
-    return await auth.api.getSession({
+    const session = await auth.api.getSession({
       headers: await headers(),
     });
+
+    const userId = getUserId(session?.user);
+    if (!session?.user || !userId) {
+      return session;
+    }
+
+    const isAdmin = await getIsAdminByUserId(userId);
+    return {
+      ...session,
+      user: {
+        ...session.user,
+        isAdmin,
+      },
+    };
   } catch {
     return null;
   }
