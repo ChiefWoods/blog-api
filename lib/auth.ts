@@ -2,6 +2,8 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { username } from "better-auth/plugins";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
 import { prisma } from "@/lib/prisma";
@@ -43,3 +45,42 @@ export const auth = betterAuth({
     nextCookies(),
   ],
 });
+
+export async function getServerSession() {
+  try {
+    return await auth.api.getSession({
+      headers: await headers(),
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function requireGuest(redirectTo: string) {
+  const session = await getServerSession();
+
+  if (session?.user) {
+    redirect(redirectTo);
+  }
+}
+
+export async function requireAuth(redirectTo = "/sign-in") {
+  const session = await getServerSession();
+
+  if (!session?.user) {
+    redirect(redirectTo);
+  }
+
+  return session;
+}
+
+export async function requireAdmin(redirectTo = "/") {
+  const session = await requireAuth("/sign-in");
+  const user = session.user as { isAdmin?: boolean };
+
+  if (!user?.isAdmin) {
+    redirect(redirectTo);
+  }
+
+  return session;
+}

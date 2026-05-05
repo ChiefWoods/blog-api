@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const betterAuthMock = vi.fn((config: unknown) => ({ config }));
+const betterAuthMock = vi.fn((config: unknown) => ({
+  config,
+  api: {
+    getSession: vi.fn(),
+  },
+}));
 const prismaAdapterMock = vi.fn((prisma: unknown, options: unknown) => ({
   kind: "prisma-adapter",
   prisma,
