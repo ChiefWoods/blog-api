@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-serif" });
@@ -52,7 +53,10 @@ export default function RootLayout({
         )}
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster richColors closeButton />
+        </ThemeProvider>
       </body>
     </html>
   );
