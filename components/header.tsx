@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { getServerSession } from "@/lib/auth";
 
 const navLinkClassName =
@@ -25,9 +26,12 @@ export async function Header() {
 
         <div className="flex items-center gap-1">
           {session?.user ? (
-            <p className="px-3 py-2 text-sm text-muted-foreground">
-              {user?.name ? `Hi, ${user.name}` : "Signed in"}
-            </p>
+            <>
+              <p className="px-3 py-2 text-sm text-muted-foreground">
+                {user?.name ? `Hi, ${user.name}` : "Signed in"}
+              </p>
+              <SignOutButton />
+            </>
           ) : (
             <Link href="/sign-in" className={navLinkClassName}>
               Sign in
