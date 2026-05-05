@@ -8,10 +8,33 @@ import { redirect } from "next/navigation";
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
 import { prisma } from "@/lib/prisma";
 
+type BetterAuthUser = {
+  email: string;
+  username?: unknown;
+} & Record<string, unknown>;
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const typedUser = user as BetterAuthUser;
+          const existingUsername =
+            typeof typedUser.username === "string" ? typedUser.username.trim() : "";
+
+          return {
+            data: {
+              ...typedUser,
+              username: existingUsername.length > 0 ? existingUsername : typedUser.email,
+            },
+          };
+        },
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
   },

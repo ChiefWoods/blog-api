@@ -61,6 +61,16 @@ describe("lib/auth.ts", () => {
         prisma: unknown;
         options: { provider: string };
       };
+      databaseHooks: {
+        user: {
+          create: {
+            before: (
+              user: Record<string, unknown>,
+              context: unknown,
+            ) => Promise<{ data: Record<string, unknown> }>;
+          };
+        };
+      };
       emailAndPassword: { enabled: boolean };
       socialProviders: Record<string, { clientId: string; clientSecret: string }>;
       account: {
@@ -93,5 +103,16 @@ describe("lib/auth.ts", () => {
       maxAge: 7 * 24 * 60 * 60,
     });
     expect(Object.keys(call.socialProviders)).toEqual(["twitter", "discord"]);
+
+    const hookResult = await call.databaseHooks.user.create.before(
+      {
+        name: "Woods User",
+        email: "chii.yuen@hotmail.com",
+        emailVerified: true,
+      },
+      null,
+    );
+
+    expect(hookResult.data.username).toBe("chii.yuen@hotmail.com");
   });
 });
