@@ -42,7 +42,7 @@ describe("lib/auth.ts", () => {
     usernameMock.mockClear();
   });
 
-  it("configures better-auth with prisma adapter, username plugin, and stateless cookie-cache sessions", async () => {
+  it("configures better-auth with prisma adapter, username plugin, and cookie-cache sessions", async () => {
     const { auth } = await import("@/lib/auth");
 
     expect(auth).toBeDefined();
@@ -72,7 +72,6 @@ describe("lib/auth.ts", () => {
           enabled: boolean;
           strategy: string;
           maxAge: number;
-          refreshCache: boolean;
         };
       };
     };
@@ -92,7 +91,6 @@ describe("lib/auth.ts", () => {
       enabled: true,
       strategy: "jwt",
       maxAge: 7 * 24 * 60 * 60,
-      refreshCache: true,
     });
     expect(Object.keys(call.socialProviders)).toEqual(["twitter", "discord"]);
   });
