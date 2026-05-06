@@ -81,7 +81,8 @@ describe("lib/auth.ts server helpers", () => {
     vi.spyOn(auth.api, "getSession").mockResolvedValue(null);
 
     await expect(requireAuth()).rejects.toMatchObject({
-      message: "Authentication required",
+      name: "AuthError",
+      message: "Authentication required.",
     });
 
     expect(redirectMock).not.toHaveBeenCalled();
@@ -114,7 +115,8 @@ describe("lib/auth.ts server helpers", () => {
     findUniqueMock.mockResolvedValue({ isAdmin: false });
 
     await expect(requireAdmin()).rejects.toMatchObject({
-      message: "Admin access required",
+      name: "AuthError",
+      message: "Admin access required.",
     });
 
     expect(redirectMock).not.toHaveBeenCalled();

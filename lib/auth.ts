@@ -8,6 +8,13 @@ import { redirect } from "next/navigation";
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
 import { prisma } from "@/lib/prisma";
 
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthError";
+  }
+}
+
 type BetterAuthUser = {
   email: string;
   username?: unknown;
@@ -129,7 +136,7 @@ export async function requireAuth() {
   const session = await getServerSession();
 
   if (!session?.user) {
-    throw new Error("Authentication required");
+    throw new AuthError("Authentication required");
   }
 
   return session;
@@ -140,7 +147,7 @@ export async function requireAdmin() {
   const user = session.user as { isAdmin?: boolean };
 
   if (!user?.isAdmin) {
-    throw new Error("Admin access required");
+    throw new AuthError("Admin access required");
   }
 
   return session;
