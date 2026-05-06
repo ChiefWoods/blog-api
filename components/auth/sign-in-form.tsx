@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { AuthSubmitButton, AuthSwitchLink, AuthTextField } from "@/components/auth/auth-form-parts";
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
@@ -17,23 +16,16 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { signIn } from "@/lib/auth-client";
+import { signInFormSchema, type SignInFormValues } from "@/lib/form-schema";
 import { getCallbackURL, getErrorMessage } from "@/lib/utils";
-
-const signInSchema = z.object({
-  email: z.email("Enter a valid email address."),
-  password: z.string().min(1, "Password is required."),
-  rememberMe: z.boolean(),
-});
-
-type SignInValues = z.infer<typeof signInSchema>;
 
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackURL = getCallbackURL(searchParams.get("callbackURL"));
 
-  const form = useForm<SignInValues>({
-    resolver: zodResolver(signInSchema),
+  const form = useForm<SignInFormValues>({
+    resolver: zodResolver(signInFormSchema),
     defaultValues: {
       email: "",
       password: "",

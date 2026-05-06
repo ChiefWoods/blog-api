@@ -4,41 +4,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import { AuthSubmitButton, AuthSwitchLink, AuthTextField } from "@/components/auth/auth-form-parts";
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
 import { FieldGroup } from "@/components/ui/field";
 import { signUp } from "@/lib/auth-client";
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
+import { signUpFormSchema, type SignUpFormValues } from "@/lib/form-schema";
 import { getCallbackURL, getErrorMessage } from "@/lib/utils";
-
-const signUpSchema = z
-  .object({
-    username: z
-      .string()
-      .trim()
-      .min(USERNAME_MIN_LENGTH, `Username must be at least ${USERNAME_MIN_LENGTH} characters.`)
-      .max(USERNAME_MAX_LENGTH, `Username must be ${USERNAME_MAX_LENGTH} characters or fewer.`)
-      .regex(/^[a-zA-Z0-9_.]+$/, "Use only letters, numbers, underscores, and dots."),
-    email: z.email("Enter a valid email address."),
-    password: z.string().min(8, "Password must be at least 8 characters."),
-    confirmPassword: z.string().min(8, "Confirm your password."),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passwords do not match.",
-  });
-
-type SignUpValues = z.infer<typeof signUpSchema>;
 
 export function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackURL = getCallbackURL(searchParams.get("callbackURL"));
 
-  const form = useForm<SignUpValues>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpFormSchema),
     defaultValues: {
       username: "",
       email: "",
