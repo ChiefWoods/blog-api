@@ -3,17 +3,10 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { username } from "better-auth/plugins";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { forbidden, redirect, unauthorized } from "next/navigation";
 
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
 import { prisma } from "@/lib/prisma";
-
-export class AuthError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AuthError";
-  }
-}
 
 type BetterAuthUser = {
   email: string;
@@ -136,7 +129,7 @@ export async function requireAuth() {
   const session = await getServerSession();
 
   if (!session?.user) {
-    throw new AuthError("Authentication required");
+    unauthorized();
   }
 
   return session;
@@ -147,7 +140,7 @@ export async function requireAdmin() {
   const user = session.user as { isAdmin?: boolean };
 
   if (!user?.isAdmin) {
-    throw new AuthError("Admin access required");
+    forbidden();
   }
 
   return session;

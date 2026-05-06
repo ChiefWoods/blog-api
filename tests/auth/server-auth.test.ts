@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const headersMock = vi.fn(async () => new Headers({ cookie: "session=value" }));
 const redirectMock = vi.fn();
+const unauthorizedMock = vi.fn();
+const forbiddenMock = vi.fn();
 const findUniqueMock = vi.fn();
 
 vi.mock("next/headers", () => ({
@@ -10,6 +12,8 @@ vi.mock("next/headers", () => ({
 
 vi.mock("next/navigation", () => ({
   redirect: redirectMock,
+  unauthorized: unauthorizedMock,
+  forbidden: forbiddenMock,
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -26,6 +30,8 @@ describe("lib/auth.ts server helpers", () => {
   beforeEach(() => {
     headersMock.mockClear();
     redirectMock.mockClear();
+    unauthorizedMock.mockReset();
+    forbiddenMock.mockReset();
     findUniqueMock.mockReset();
     vi.restoreAllMocks();
   });
@@ -76,16 +82,17 @@ describe("lib/auth.ts server helpers", () => {
     expect(redirectMock).toHaveBeenCalledWith("/posts/hello-world");
   });
 
-  it("throws unauthenticated error when protected route user is not signed in", async () => {
+  it("calls unauthorized interrupt when protected route user is not signed in", async () => {
     const { auth, requireAuth } = await loadAuthModule();
     vi.spyOn(auth.api, "getSession").mockResolvedValue(null);
-
-    await expect(requireAuth()).rejects.toMatchObject({
-      name: "AuthError",
-      message: "Authentication required.",
+    unauthorizedMock.mockImplementation(() => {
+      throw new Error("UNAUTHORIZED_INTERRUPT");
     });
 
+    await expect(requireAuth()).rejects.toThrow("UNAUTHORIZED_INTERRUPT");
+
     expect(redirectMock).not.toHaveBeenCalled();
+    expect(unauthorizedMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns session for protected routes when user is signed in", async () => {
@@ -106,20 +113,21 @@ describe("lib/auth.ts server helpers", () => {
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
-  it("throws unauthenticated error for non-admin users", async () => {
+  it("calls forbidden interrupt for non-admin users", async () => {
     const { auth, requireAdmin } = await loadAuthModule();
     vi.spyOn(auth.api, "getSession").mockResolvedValue({
       session: { id: "sess-1" },
       user: { id: "user-1" },
     } as never);
     findUniqueMock.mockResolvedValue({ isAdmin: false });
-
-    await expect(requireAdmin()).rejects.toMatchObject({
-      name: "AuthError",
-      message: "Admin access required.",
+    forbiddenMock.mockImplementation(() => {
+      throw new Error("FORBIDDEN_INTERRUPT");
     });
 
+    await expect(requireAdmin()).rejects.toThrow("FORBIDDEN_INTERRUPT");
+
     expect(redirectMock).not.toHaveBeenCalled();
+    expect(forbiddenMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns session for admin routes when user is admin", async () => {
