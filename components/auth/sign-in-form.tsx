@@ -117,7 +117,7 @@ export function SignInForm() {
         disabled={form.formState.isSubmitting}
       />
 
-      <AuthSwitchLink prompt="Need an account?" href="/sign-up" linkText="Sign up" />
+      <AuthSwitchLink prompt="Don't have an account?" href="/sign-up" linkText="Sign up" />
     </form>
   );
 }
