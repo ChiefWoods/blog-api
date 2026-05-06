@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { Prisma } from "@/generated/prisma/client";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -26,6 +28,17 @@ export function getErrorMessage(error: unknown, defaultMessage: string) {
   }
 
   return defaultMessage;
+}
+
+export function formatDateTime(value: Date | string | null | undefined) {
+  if (!value) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 export function escapeHtml(value: string) {
