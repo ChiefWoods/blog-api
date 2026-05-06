@@ -69,15 +69,20 @@ export const postRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const post = await ctx.prisma.post.findFirst({
-        where: {
-          slug: input.slug,
-          published: true,
-        },
+        where: ctx.isAdmin
+          ? {
+              slug: input.slug,
+            }
+          : {
+              slug: input.slug,
+              published: true,
+            },
         select: {
           id: true,
           title: true,
           slug: true,
           excerpt: true,
+          published: true,
           contentJson: true,
           contentHtml: true,
           publishedAt: true,
