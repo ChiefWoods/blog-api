@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { NavLink } from "@/components/nav-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getServerSession } from "@/lib/auth";
 
@@ -24,9 +25,9 @@ export async function Header() {
             Blogga
           </Link>
           {user?.isAdmin && (
-            <Link href="/blogger/posts" className={navLinkClassName}>
+            <NavLink href="/blogger/posts" className={navLinkClassName}>
               Dashboard
-            </Link>
+            </NavLink>
           )}
         </nav>
 
