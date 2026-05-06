@@ -1,23 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { AuthSubmitButton, AuthSwitchLink, AuthTextField } from "@/components/auth/auth-form-parts";
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
-import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { FieldGroup } from "@/components/ui/field";
 import { signUp } from "@/lib/auth-client";
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
 import { getCallbackURL, getErrorMessage } from "@/lib/utils";
@@ -82,99 +73,54 @@ export function SignUpForm() {
   return (
     <form className="flex flex-col gap-5" onSubmit={onSubmit} noValidate>
       <FieldGroup>
-        <Controller
+        <AuthTextField
+          control={form.control}
           name="username"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sign-up-username">Username</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  id="sign-up-username"
-                  type="text"
-                  autoComplete="username"
-                  placeholder="your_handle"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldDescription>
-                  Use {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} characters: letters, numbers,
-                  underscores, or dots.
-                </FieldDescription>
-                <FieldError>{fieldState.error?.message}</FieldError>
-              </FieldContent>
-            </Field>
-          )}
+          id="sign-up-username"
+          label="Username"
+          type="text"
+          autoComplete="username"
+          placeholder="your_handle"
+          description={`Use ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} characters: letters, numbers, underscores, or dots.`}
         />
 
-        <Controller
+        <AuthTextField
+          control={form.control}
           name="email"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sign-up-email">Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  id="sign-up-email"
-                  type="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="you@example.com"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError>{fieldState.error?.message}</FieldError>
-              </FieldContent>
-            </Field>
-          )}
+          id="sign-up-email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="you@example.com"
         />
 
-        <Controller
+        <AuthTextField
+          control={form.control}
           name="password"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sign-up-password">Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  id="sign-up-password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Create a secure password"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError>{fieldState.error?.message}</FieldError>
-              </FieldContent>
-            </Field>
-          )}
+          id="sign-up-password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Create a secure password"
         />
 
-        <Controller
-          name="confirmPassword"
+        <AuthTextField
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sign-up-confirm-password">Confirm password</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  id="sign-up-confirm-password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Repeat your password"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError>{fieldState.error?.message}</FieldError>
-              </FieldContent>
-            </Field>
-          )}
+          name="confirmPassword"
+          id="sign-up-confirm-password"
+          label="Confirm password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Repeat your password"
         />
       </FieldGroup>
 
-      <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        {form.formState.isSubmitting ? "Creating account..." : "Create account"}
-      </Button>
+      <AuthSubmitButton
+        pending={form.formState.isSubmitting}
+        pendingText="Creating account..."
+        idleText="Create account"
+      />
 
       <SocialAuthButtons
         callbackURL={callbackURL}
@@ -182,15 +128,7 @@ export function SignUpForm() {
         disabled={form.formState.isSubmitting}
       />
 
-      <p className="text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <Link
-          className="font-medium text-primary underline-offset-4 hover:underline"
-          href="/sign-in"
-        >
-          Sign in
-        </Link>
-      </p>
+      <AuthSwitchLink prompt="Already have an account?" href="/sign-in" linkText="Sign in" />
     </form>
   );
 }

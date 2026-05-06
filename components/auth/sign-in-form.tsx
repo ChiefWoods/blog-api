@@ -1,24 +1,21 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { AuthSubmitButton, AuthSwitchLink, AuthTextField } from "@/components/auth/auth-form-parts";
 import { SocialAuthButtons } from "@/components/auth/social-auth-buttons";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldContent,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
 import { getCallbackURL, getErrorMessage } from "@/lib/utils";
 
@@ -67,47 +64,25 @@ export function SignInForm() {
   return (
     <form className="flex flex-col gap-5" onSubmit={onSubmit} noValidate>
       <FieldGroup>
-        <Controller
-          name="email"
+        <AuthTextField
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sign-in-email">Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  id="sign-in-email"
-                  type="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="you@example.com"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError>{fieldState.error?.message}</FieldError>
-              </FieldContent>
-            </Field>
-          )}
+          name="email"
+          id="sign-in-email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="you@example.com"
         />
 
-        <Controller
-          name="password"
+        <AuthTextField
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sign-in-password">Password</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  id="sign-in-password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldError>{fieldState.error?.message}</FieldError>
-              </FieldContent>
-            </Field>
-          )}
+          name="password"
+          id="sign-in-password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Enter your password"
         />
 
         <Controller
@@ -130,9 +105,11 @@ export function SignInForm() {
         />
       </FieldGroup>
 
-      <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
-      </Button>
+      <AuthSubmitButton
+        pending={form.formState.isSubmitting}
+        pendingText="Signing in..."
+        idleText="Sign in"
+      />
 
       <SocialAuthButtons
         callbackURL={callbackURL}
@@ -140,15 +117,7 @@ export function SignInForm() {
         disabled={form.formState.isSubmitting}
       />
 
-      <p className="text-sm text-muted-foreground">
-        Need an account?{" "}
-        <Link
-          className="font-medium text-primary underline-offset-4 hover:underline"
-          href="/sign-up"
-        >
-          Sign up
-        </Link>
-      </p>
+      <AuthSwitchLink prompt="Need an account?" href="/sign-up" linkText="Sign up" />
     </form>
   );
 }
