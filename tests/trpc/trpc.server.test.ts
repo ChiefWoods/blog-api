@@ -235,6 +235,9 @@ describe("tRPC procedures", () => {
       isAdmin: true,
     });
 
+    ctx.prisma.post.findUnique.mockResolvedValue({
+      publishedAt: null,
+    });
     ctx.prisma.post.update.mockResolvedValue({
       id: "post-1",
       published: true,
@@ -244,6 +247,10 @@ describe("tRPC procedures", () => {
 
     await caller.post.publish({ id: "post-1" });
 
+    expect(ctx.prisma.post.findUnique).toHaveBeenCalledWith({
+      where: { id: "post-1" },
+      select: { publishedAt: true },
+    });
     expect(ctx.prisma.post.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "post-1" },
@@ -255,14 +262,18 @@ describe("tRPC procedures", () => {
     );
   });
 
-  it("clears publishedAt when unpublishing", async () => {
+  it("keeps publish history when unpublishing", async () => {
     const ctx = createMockContext({
       user: authenticatedUser({ isAdmin: true }),
       isAuthenticated: true,
       isAdmin: true,
     });
 
-    ctx.prisma.post.update.mockResolvedValue({ id: "post-1", published: false, publishedAt: null });
+    ctx.prisma.post.update.mockResolvedValue({
+      id: "post-1",
+      published: false,
+      publishedAt: new Date("2026-05-05T00:00:00.000Z"),
+    });
     const caller = appRouter.createCaller(ctx as never);
 
     await caller.post.unpublish({ id: "post-1" });
@@ -272,7 +283,6 @@ describe("tRPC procedures", () => {
         where: { id: "post-1" },
         data: {
           published: false,
-          publishedAt: null,
         },
       }),
     );

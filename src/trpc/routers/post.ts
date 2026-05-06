@@ -234,13 +234,30 @@ export const postRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const existingPost = await ctx.prisma.post.findUnique({
+        where: {
+          id: input.id,
+        },
+        select: {
+          publishedAt: true,
+        },
+      });
+
+      if (!existingPost) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Post not found",
+        });
+      }
+
       return ctx.prisma.post.update({
         where: {
           id: input.id,
         },
         data: {
           published: true,
-          publishedAt: new Date(),
+          // keep original first-published timestamp when un-hiding
+          publishedAt: existingPost.publishedAt ?? new Date(),
         },
       });
     }),
@@ -258,7 +275,6 @@ export const postRouter = router({
         },
         data: {
           published: false,
-          publishedAt: null,
         },
       });
     }),
