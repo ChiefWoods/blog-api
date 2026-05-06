@@ -125,22 +125,22 @@ export async function requireGuest(redirectTo: string) {
   }
 }
 
-export async function requireAuth(redirectTo = "/sign-in") {
+export async function requireAuth() {
   const session = await getServerSession();
 
   if (!session?.user) {
-    redirect(redirectTo);
+    throw new Error("Authentication required");
   }
 
   return session;
 }
 
-export async function requireAdmin(redirectTo = "/") {
-  const session = await requireAuth("/sign-in");
+export async function requireAdmin() {
+  const session = await requireAuth();
   const user = session.user as { isAdmin?: boolean };
 
   if (!user?.isAdmin) {
-    redirect(redirectTo);
+    throw new Error("Admin access required");
   }
 
   return session;

@@ -76,13 +76,15 @@ describe("lib/auth.ts server helpers", () => {
     expect(redirectMock).toHaveBeenCalledWith("/posts/hello-world");
   });
 
-  it("redirects protected routes when user is not signed in", async () => {
+  it("throws unauthenticated error when protected route user is not signed in", async () => {
     const { auth, requireAuth } = await loadAuthModule();
     vi.spyOn(auth.api, "getSession").mockResolvedValue(null);
 
-    await requireAuth("/sign-in");
+    await expect(requireAuth()).rejects.toMatchObject({
+      message: "Authentication required",
+    });
 
-    expect(redirectMock).toHaveBeenCalledWith("/sign-in");
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it("returns session for protected routes when user is signed in", async () => {
@@ -91,7 +93,7 @@ describe("lib/auth.ts server helpers", () => {
     vi.spyOn(auth.api, "getSession").mockResolvedValue(session as never);
     findUniqueMock.mockResolvedValue({ isAdmin: false });
 
-    const result = await requireAuth("/sign-in");
+    const result = await requireAuth();
 
     expect(result).toEqual({
       ...session,
@@ -103,7 +105,7 @@ describe("lib/auth.ts server helpers", () => {
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
-  it("redirects admin routes for non-admin users", async () => {
+  it("throws unauthenticated error for non-admin users", async () => {
     const { auth, requireAdmin } = await loadAuthModule();
     vi.spyOn(auth.api, "getSession").mockResolvedValue({
       session: { id: "sess-1" },
@@ -111,9 +113,11 @@ describe("lib/auth.ts server helpers", () => {
     } as never);
     findUniqueMock.mockResolvedValue({ isAdmin: false });
 
-    await requireAdmin("/");
+    await expect(requireAdmin()).rejects.toMatchObject({
+      message: "Admin access required",
+    });
 
-    expect(redirectMock).toHaveBeenCalledWith("/");
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it("returns session for admin routes when user is admin", async () => {
@@ -122,7 +126,7 @@ describe("lib/auth.ts server helpers", () => {
     vi.spyOn(auth.api, "getSession").mockResolvedValue(session as never);
     findUniqueMock.mockResolvedValue({ isAdmin: true });
 
-    const result = await requireAdmin("/");
+    const result = await requireAdmin();
 
     expect(result).toEqual({
       ...session,
