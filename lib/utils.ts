@@ -27,3 +27,45 @@ export function getErrorMessage(error: unknown, defaultMessage: string) {
 
   return defaultMessage;
 }
+
+export function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+export function buildPostContentPayload(content: string) {
+  const text = content.trim();
+  const contentJson: Prisma.InputJsonValue = {
+    type: "plain-text",
+    text,
+  };
+
+  if (!text) {
+    return {
+      contentJson,
+      contentHtml: null,
+    };
+  }
+
+  return {
+    contentJson,
+    contentHtml: `<p>${escapeHtml(text).replaceAll("\n", "<br />")}</p>`,
+  };
+}
+
+export function extractPostBodyText(contentJson: unknown) {
+  if (
+    contentJson &&
+    typeof contentJson === "object" &&
+    "text" in contentJson &&
+    typeof (contentJson as { text?: unknown }).text === "string"
+  ) {
+    return (contentJson as { text: string }).text;
+  }
+
+  return "";
+}
