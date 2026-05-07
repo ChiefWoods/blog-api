@@ -3,9 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { Editor, plainTextToSerializedEditorState } from "@/components/editor-x";
 import { SlugInput } from "@/components/slug-input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +33,7 @@ export function NewPostForm() {
 
   const published = form.watch("published");
   const submitLabel = published ? "Create post" : "Draft post";
+  const initialContentState = useMemo(() => plainTextToSerializedEditorState(""), []);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -109,14 +112,14 @@ export function NewPostForm() {
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="new-post-content">Content</FieldLabel>
               <FieldContent>
-                <Textarea
-                  {...field}
-                  id="new-post-content"
-                  placeholder="Write your post content..."
-                  className="max-h-96 min-h-48 overflow-y-auto"
-                  aria-invalid={fieldState.invalid}
+                <Editor
+                  editorSerializedState={initialContentState}
+                  contentEditableId="new-post-content"
+                  contentAriaInvalid={fieldState.invalid}
+                  contentAriaDescribedBy="new-post-content-error"
+                  onPlainTextChange={field.onChange}
                 />
-                <FieldError>{fieldState.error?.message}</FieldError>
+                <FieldError id="new-post-content-error">{fieldState.error?.message}</FieldError>
               </FieldContent>
             </Field>
           )}

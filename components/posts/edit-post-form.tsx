@@ -1,12 +1,15 @@
 "use client";
 
+import type { SerializedEditorState } from "lexical";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { Editor, plainTextToSerializedEditorState } from "@/components/editor-x";
 import { SlugInput } from "@/components/slug-input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -19,6 +22,7 @@ type EditPostFormProps = {
   postId: string;
   currentSlug: string;
   initialValues: UpdatePostFormValues;
+  initialSerializedContent?: SerializedEditorState | null;
   isPublished: boolean;
   isHidden: boolean;
 };
@@ -27,6 +31,7 @@ export function EditPostForm({
   postId,
   currentSlug,
   initialValues,
+  initialSerializedContent,
   isPublished,
   isHidden,
 }: EditPostFormProps) {
@@ -37,6 +42,10 @@ export function EditPostForm({
     resolver: zodResolver(updatePostFormSchema),
     defaultValues: initialValues,
   });
+  const initialContentState = useMemo(
+    () => initialSerializedContent ?? plainTextToSerializedEditorState(initialValues.content),
+    [initialSerializedContent, initialValues.content],
+  );
 
   async function submitWithIntent(intent: "save" | "publish") {
     setSubmitIntent(intent);
@@ -124,13 +133,14 @@ export function EditPostForm({
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="edit-post-content">Content</FieldLabel>
               <FieldContent>
-                <Textarea
-                  {...field}
-                  id="edit-post-content"
-                  className="max-h-96 min-h-48 overflow-y-auto"
-                  aria-invalid={fieldState.invalid}
+                <Editor
+                  editorSerializedState={initialContentState}
+                  contentEditableId="edit-post-content"
+                  contentAriaInvalid={fieldState.invalid}
+                  contentAriaDescribedBy="edit-post-content-error"
+                  onPlainTextChange={field.onChange}
                 />
-                <FieldError>{fieldState.error?.message}</FieldError>
+                <FieldError id="edit-post-content-error">{fieldState.error?.message}</FieldError>
               </FieldContent>
             </Field>
           )}
