@@ -4,8 +4,7 @@ import { BackToDashboardLink } from "@/components/back-to-dashboard-link";
 import { EditPostForm } from "@/components/posts/edit-post-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
-import { formatDateTime } from "@/lib/utils";
-import { extractPostBodyText } from "@/lib/utils";
+import { extractLexicalSerializedState, extractPostBodyText, formatDateTime } from "@/lib/utils";
 import { createServerCaller } from "@/src/trpc/server";
 
 type EditPostPageProps = {
@@ -28,6 +27,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
   const currentPost = post;
   const postId = currentPost.id;
   const currentSlug = currentPost.slug;
+  const initialSerializedContent = extractLexicalSerializedState(currentPost.contentJson);
   const contentText = extractPostBodyText(currentPost.contentJson);
   const isHidden = !currentPost.published && Boolean(currentPost.publishedAt);
   const postStatus = currentPost.published
@@ -58,6 +58,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
               excerpt: currentPost.excerpt ?? "",
               content: contentText,
             }}
+            initialSerializedContent={initialSerializedContent}
             isPublished={currentPost.published}
             isHidden={isHidden}
           />

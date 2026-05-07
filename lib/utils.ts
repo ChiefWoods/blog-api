@@ -1,8 +1,9 @@
+import type { SerializedEditorState } from "lexical";
+
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 import { Prisma } from "@/generated/prisma/client";
-import { SerializedEditorState } from "lexical";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -127,14 +128,27 @@ function extractTextFromLexicalNode(node: unknown): string {
   return node.children.map(extractTextFromLexicalNode).join("");
 }
 
+export function extractLexicalSerializedState(contentJson: unknown): SerializedEditorState | null {
+  if (!isRecord(contentJson)) {
+    return null;
+  }
+
+  const root = contentJson.root;
+  if (!isRecord(root) || root.type !== "root" || !Array.isArray(root.children)) {
+    return null;
+  }
+
+  return contentJson as unknown as SerializedEditorState;
+}
+
 export function extractPostBodyText(contentJson: unknown) {
-  if (
-    contentJson &&
-    typeof contentJson === "object" &&
-    "text" in contentJson &&
-    typeof (contentJson as { text?: unknown }).text === "string"
-  ) {
-    return (contentJson as { text: string }).text;
+  if (isRecord(contentJson) && "text" in contentJson && typeof contentJson.text === "string") {
+    return contentJson.text;
+  }
+
+  const lexicalState = extractLexicalSerializedState(contentJson);
+  if (lexicalState) {
+    return lexicalState.root.children.map(extractTextFromLexicalNode).join("\n\n");
   }
 
   return "";
