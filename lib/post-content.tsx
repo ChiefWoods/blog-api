@@ -2,8 +2,6 @@ import type { Klass, LexicalNode, SerializedEditorState } from "lexical";
 import type { ReactNode } from "react";
 
 import parse from "html-react-parser";
-import DOMPurify from "isomorphic-dompurify";
-import { JSDOM } from "jsdom";
 import { Tweet } from "react-tweet";
 
 import {
@@ -50,6 +48,35 @@ const SANITIZE_OPTIONS = {
     "data-tweet-id",
   ],
 };
+
+type DomPurifyModule = {
+  sanitize: (dirty: string, options?: typeof SANITIZE_OPTIONS) => string;
+};
+
+let domPurifyPromise: Promise<DomPurifyModule | null> | null = null;
+
+function fallbackSanitize(html: string): string {
+  return html
+    .replaceAll(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replaceAll(/\son\w+="[^"]*"/gi, "")
+    .replaceAll(/\son\w+='[^']*'/gi, "")
+    .replaceAll(/javascript:/gi, "");
+}
+
+async function sanitizeHtml(html: string): Promise<string> {
+  if (!domPurifyPromise) {
+    domPurifyPromise = import("isomorphic-dompurify")
+      .then((mod) => mod.default as DomPurifyModule)
+      .catch(() => null);
+  }
+
+  const sanitizer = await domPurifyPromise;
+  if (!sanitizer) {
+    return fallbackSanitize(html);
+  }
+
+  return sanitizer.sanitize(html, SANITIZE_OPTIONS);
+}
 
 function parseContentHtml(html: string): ReactNode {
   return parse(html, {
@@ -359,11 +386,17 @@ function normalizeSerializedStateForServerRender(
   } as SerializedEditorState;
 }
 
-function ensureLexicalDom() {
+async function ensureLexicalDom() {
   if (lexicalDomInitialized || typeof window !== "undefined") {
-    return;
+    return true;
   }
 
+  const jsdomModule = await import("jsdom").catch(() => null);
+  if (!jsdomModule) {
+    return false;
+  }
+
+  const { JSDOM } = jsdomModule;
   const dom = new JSDOM("<!doctype html><html><body></body></html>");
   const globalWithDom = globalThis as Record<string, unknown>;
   const domWindow = dom.window as unknown as Record<string, unknown>;
@@ -376,12 +409,16 @@ function ensureLexicalDom() {
   globalWithDom.HTMLElement = domWindow.HTMLElement;
   globalWithDom.DocumentFragment = domWindow.DocumentFragment;
   lexicalDomInitialized = true;
+  return true;
 }
 
 async function loadLexicalRuntime(): Promise<LexicalRuntime> {
   if (!lexicalRuntimePromise) {
     lexicalRuntimePromise = (async () => {
-      ensureLexicalDom();
+      const domReady = await ensureLexicalDom();
+      if (!domReady) {
+        throw new Error("Lexical DOM runtime unavailable");
+      }
 
       const [htmlMod, headlessMod, linkMod, listMod, overflowMod, richMod, tableMod] =
         await Promise.all([
@@ -438,7 +475,7 @@ export async function renderPostContent(contentJson: unknown): Promise<ReactNode
 
   try {
     const html = await lexicalStateToHtml(lexicalState);
-    const sanitizedHtml = DOMPurify.sanitize(html, SANITIZE_OPTIONS);
+    const sanitizedHtml = await sanitizeHtml(html);
 
     if (!sanitizedHtml.trim()) {
       return "No content provided.";
@@ -446,10 +483,7 @@ export async function renderPostContent(contentJson: unknown): Promise<ReactNode
 
     return parseContentHtml(sanitizedHtml);
   } catch {
-    const fallbackHtml = DOMPurify.sanitize(
-      renderStructuredFallbackHtml(lexicalState),
-      SANITIZE_OPTIONS,
-    );
+    const fallbackHtml = await sanitizeHtml(renderStructuredFallbackHtml(lexicalState));
 
     if (fallbackHtml.trim()) {
       return parseContentHtml(fallbackHtml);
