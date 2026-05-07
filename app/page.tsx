@@ -28,27 +28,27 @@ export default async function Page() {
         <ul className="grid gap-4 sm:gap-5">
           {publishedPosts.items.map((post) => (
             <li key={post.id}>
-              <Card className="border border-border/70 bg-card/90">
-                <CardHeader className="space-y-3">
-                  <CardTitle>
-                    <Link
-                      href={`/posts/${post.slug}`}
-                      className="underline-offset-4 hover:text-primary hover:underline"
-                    >
+              <Link
+                href={`/posts/${post.slug}`}
+                className="block rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+              >
+                <Card className="border border-border/70 bg-card/90 transition-colors hover:border-primary/40">
+                  <CardHeader className="space-y-3">
+                    <CardTitle className="underline-offset-4 group-hover/card:text-primary group-hover/card:underline">
                       {post.title}
-                    </Link>
-                  </CardTitle>
-                  <CardDescription className="flex flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm">
-                    <span>@{post.author.username}</span>
-                    <span>{formatDateTime(post.publishedAt ?? post.createdAt)}</span>
-                  </CardDescription>
-                </CardHeader>
-                {post.excerpt && (
-                  <CardContent>
-                    <p className="text-sm leading-6 text-muted-foreground">{post.excerpt}</p>
-                  </CardContent>
-                )}
-              </Card>
+                    </CardTitle>
+                    <CardDescription className="flex flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm">
+                      <span>@{post.author.username}</span>
+                      <span>{formatDateTime(post.publishedAt ?? post.createdAt)}</span>
+                    </CardDescription>
+                  </CardHeader>
+                  {post.excerpt && (
+                    <CardContent>
+                      <p className="text-sm leading-6 text-muted-foreground">{post.excerpt}</p>
+                    </CardContent>
+                  )}
+                </Card>
+              </Link>
             </li>
           ))}
         </ul>
