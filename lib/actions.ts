@@ -1,5 +1,6 @@
 "use server";
 
+import { TRPCError } from "@trpc/server";
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin, requireAuth } from "@/lib/auth";
@@ -14,6 +15,37 @@ import { createServerCaller } from "@/src/trpc/server";
 
 import { buildPostContentPayload } from "./utils";
 
+type PostConflictField = "slug";
+
+export type PostWriteActionResult =
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      field: PostConflictField;
+      message: string;
+    };
+
+function mapPostConflictResult(
+  error: unknown,
+): Extract<PostWriteActionResult, { ok: false }> | null {
+  if (error instanceof TRPCError) {
+    if (error.code !== "CONFLICT") {
+      return null;
+    }
+
+    const message = error.message || "A post with this value already exists.";
+    return {
+      ok: false,
+      field: "slug",
+      message,
+    };
+  }
+
+  return null;
+}
+
 function getFormPostId(formData: FormData) {
   const id = formData.get("postId");
   if (typeof id !== "string" || id.length === 0) {
@@ -22,7 +54,9 @@ function getFormPostId(formData: FormData) {
   return id;
 }
 
-export async function createPostAction(input: CreatePostFormValues) {
+export async function createPostAction(
+  input: CreatePostFormValues,
+): Promise<PostWriteActionResult> {
   await requireAdmin();
 
   const values = createPostFormSchema.parse(input);
@@ -30,20 +64,32 @@ export async function createPostAction(input: CreatePostFormValues) {
   const { contentJson, contentHtml } = buildPostContentPayload(values.content);
 
   const actionCaller = await createServerCaller();
-  const post = await actionCaller.post.create({
-    title: values.title,
-    slug,
-    excerpt: values.excerpt.trim() ? values.excerpt : null,
-    contentJson,
-    contentHtml,
-    published: values.published,
-  });
+  let post: Awaited<ReturnType<typeof actionCaller.post.create>>;
+  try {
+    post = await actionCaller.post.create({
+      title: values.title,
+      slug,
+      excerpt: values.excerpt.trim() ? values.excerpt : null,
+      contentJson,
+      contentHtml,
+      published: values.published,
+    });
+  } catch (error) {
+    const conflict = mapPostConflictResult(error);
+    if (conflict) {
+      return conflict;
+    }
+
+    throw error;
+  }
 
   revalidatePath("/");
   revalidatePath("/blogger/posts");
   if (values.published) {
     revalidatePath(`/posts/${post.slug}`);
   }
+
+  return { ok: true };
 }
 
 export async function updatePostAction(
@@ -51,7 +97,7 @@ export async function updatePostAction(
     id: string;
     currentSlug: string;
   },
-) {
+): Promise<PostWriteActionResult> {
   await requireAdmin();
 
   const values = updatePostFormSchema.parse(input);
@@ -59,14 +105,24 @@ export async function updatePostAction(
   const { contentJson, contentHtml } = buildPostContentPayload(values.content);
 
   const actionCaller = await createServerCaller();
-  const updatedPost = await actionCaller.post.update({
-    id: input.id,
-    title: values.title,
-    slug,
-    excerpt: values.excerpt.trim() ? values.excerpt : null,
-    contentJson,
-    contentHtml,
-  });
+  let updatedPost: Awaited<ReturnType<typeof actionCaller.post.update>>;
+  try {
+    updatedPost = await actionCaller.post.update({
+      id: input.id,
+      title: values.title,
+      slug,
+      excerpt: values.excerpt.trim() ? values.excerpt : null,
+      contentJson,
+      contentHtml,
+    });
+  } catch (error) {
+    const conflict = mapPostConflictResult(error);
+    if (conflict) {
+      return conflict;
+    }
+
+    throw error;
+  }
 
   revalidatePath("/");
   revalidatePath("/blogger/posts");
@@ -81,6 +137,8 @@ export async function updatePostAction(
       revalidatePath(`/posts/${input.currentSlug}`);
     }
   }
+
+  return { ok: true };
 }
 
 export async function updateAndPublishPostAction(
@@ -88,7 +146,7 @@ export async function updateAndPublishPostAction(
     id: string;
     currentSlug: string;
   },
-) {
+): Promise<PostWriteActionResult> {
   await requireAdmin();
 
   const values = updatePostFormSchema.parse(input);
@@ -96,14 +154,23 @@ export async function updateAndPublishPostAction(
   const { contentJson, contentHtml } = buildPostContentPayload(values.content);
 
   const actionCaller = await createServerCaller();
-  await actionCaller.post.update({
-    id: input.id,
-    title: values.title,
-    slug,
-    excerpt: values.excerpt.trim() ? values.excerpt : null,
-    contentJson,
-    contentHtml,
-  });
+  try {
+    await actionCaller.post.update({
+      id: input.id,
+      title: values.title,
+      slug,
+      excerpt: values.excerpt.trim() ? values.excerpt : null,
+      contentJson,
+      contentHtml,
+    });
+  } catch (error) {
+    const conflict = mapPostConflictResult(error);
+    if (conflict) {
+      return conflict;
+    }
+
+    throw error;
+  }
 
   const publishedPost = await actionCaller.post.publish({ id: input.id });
 
@@ -116,6 +183,8 @@ export async function updateAndPublishPostAction(
   if (input.currentSlug !== publishedPost.slug) {
     revalidatePath(`/posts/${input.currentSlug}`);
   }
+
+  return { ok: true };
 }
 
 export async function publishAction(formData: FormData) {

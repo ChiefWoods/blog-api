@@ -23,6 +23,41 @@ const mutablePostFields = z.object({
   contentHtml: z.string().nullable().optional(),
 });
 
+function throwPostConflictError(): never {
+  throw new TRPCError({
+    code: "CONFLICT",
+    message: "Slug already exists.",
+  });
+}
+
+function isKnownUniqueConstraintError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const errorLike = error as { code?: string; message?: string };
+  const message = (errorLike.message ?? "").toLowerCase();
+
+  return errorLike.code === "P2002" || message.includes("unique constraint failed");
+}
+
+function isSlugUniqueConstraintError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const errorLike = error as {
+    message?: string;
+    meta?: { target?: unknown };
+  };
+  const message = (errorLike.message ?? "").toLowerCase();
+  const target = Array.isArray(errorLike.meta?.target)
+    ? errorLike.meta.target.map((value) => String(value).toLowerCase())
+    : [];
+
+  return target.includes("slug") || message.includes("slug");
+}
+
 export const postRouter = router({
   listPublished: publicProcedure.input(listPublishedInput).query(async ({ ctx, input }) => {
     const posts = await ctx.prisma.post.findMany({
@@ -197,18 +232,39 @@ export const postRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.post.create({
-        data: {
-          title: input.title,
+      const conflictingPost = await ctx.prisma.post.findFirst({
+        where: {
           slug: input.slug,
-          excerpt: input.excerpt ?? null,
-          contentJson: input.contentJson,
-          contentHtml: input.contentHtml ?? null,
-          published: input.published,
-          publishedAt: input.published ? new Date() : null,
-          authorId: ctx.user.id,
+        },
+        select: {
+          slug: true,
         },
       });
+
+      if (conflictingPost?.slug === input.slug) {
+        throwPostConflictError();
+      }
+
+      try {
+        return await ctx.prisma.post.create({
+          data: {
+            title: input.title,
+            slug: input.slug,
+            excerpt: input.excerpt ?? null,
+            contentJson: input.contentJson,
+            contentHtml: input.contentHtml ?? null,
+            published: input.published,
+            publishedAt: input.published ? new Date() : null,
+            authorId: ctx.user.id,
+          },
+        });
+      } catch (error) {
+        if (isKnownUniqueConstraintError(error) && isSlugUniqueConstraintError(error)) {
+          throwPostConflictError();
+        }
+
+        throw error;
+      }
     }),
 
   update: adminProcedure
@@ -218,18 +274,44 @@ export const postRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.prisma.post.update({
-        where: {
-          id: input.id,
-        },
-        data: {
-          title: input.title,
-          slug: input.slug,
-          excerpt: input.excerpt,
-          contentJson: input.contentJson,
-          contentHtml: input.contentHtml,
-        },
-      });
+      if (input.slug) {
+        const conflictingPost = await ctx.prisma.post.findFirst({
+          where: {
+            id: {
+              not: input.id,
+            },
+            slug: input.slug,
+          },
+          select: {
+            slug: true,
+          },
+        });
+
+        if (conflictingPost?.slug === input.slug) {
+          throwPostConflictError();
+        }
+      }
+
+      try {
+        return await ctx.prisma.post.update({
+          where: {
+            id: input.id,
+          },
+          data: {
+            title: input.title,
+            slug: input.slug,
+            excerpt: input.excerpt,
+            contentJson: input.contentJson,
+            contentHtml: input.contentHtml,
+          },
+        });
+      } catch (error) {
+        if (isKnownUniqueConstraintError(error) && isSlugUniqueConstraintError(error)) {
+          throwPostConflictError();
+        }
+
+        throw error;
+      }
     }),
 
   publish: adminProcedure

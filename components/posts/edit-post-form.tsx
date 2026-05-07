@@ -58,10 +58,20 @@ export function EditPostForm({
         };
 
         if (intent === "publish") {
-          await updateAndPublishPostAction(payload);
+          const result = await updateAndPublishPostAction(payload);
+          if (!result.ok) {
+            form.setError(result.field, { message: result.message });
+            return;
+          }
+
           toast.success("Post saved and published.");
         } else {
-          await updatePostAction(payload);
+          const result = await updatePostAction(payload);
+          if (!result.ok) {
+            form.setError(result.field, { message: result.message });
+            return;
+          }
+
           toast.success("Post saved.");
         }
 

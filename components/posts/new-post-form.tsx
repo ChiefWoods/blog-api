@@ -37,7 +37,12 @@ export function NewPostForm() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await createPostAction(values);
+      const result = await createPostAction(values);
+      if (!result.ok) {
+        form.setError(result.field, { message: result.message });
+        return;
+      }
+
       toast.success("Post created successfully.");
       router.replace("/blogger/posts");
     } catch {

@@ -288,13 +288,14 @@ describe("tRPC procedures", () => {
     );
   });
 
-  it("propagates duplicate slug errors from database layer", async () => {
+  it("maps duplicate slug errors from database layer to conflict errors", async () => {
     const ctx = createMockContext({
       user: authenticatedUser({ isAdmin: true }),
       isAuthenticated: true,
       isAdmin: true,
     });
 
+    ctx.prisma.post.findFirst.mockResolvedValue(null);
     ctx.prisma.post.create.mockRejectedValue(
       new Error("Unique constraint failed on fields: (`slug`)"),
     );
@@ -307,7 +308,36 @@ describe("tRPC procedures", () => {
         contentJson: {},
         published: false,
       }),
-    ).rejects.toThrow(/Unique constraint failed/);
+    ).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "Slug already exists.",
+    });
+  });
+
+  it("throws CONFLICT when updating a post to an existing slug", async () => {
+    const ctx = createMockContext({
+      user: authenticatedUser({ isAdmin: true }),
+      isAuthenticated: true,
+      isAdmin: true,
+    });
+
+    ctx.prisma.post.findFirst.mockResolvedValue({
+      id: "post-2",
+      slug: "existing-slug",
+      title: "Other title",
+    });
+    const caller = appRouter.createCaller(ctx as never);
+
+    await expect(
+      caller.post.update({
+        id: "post-1",
+        slug: "existing-slug",
+      }),
+    ).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "Slug already exists.",
+    });
+    expect(ctx.prisma.post.update).not.toHaveBeenCalled();
   });
 
   it("propagates relation errors from database layer on comment delete", async () => {
