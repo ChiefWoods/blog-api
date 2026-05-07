@@ -6,6 +6,7 @@ import Script from "next/script";
 import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-serif" });
@@ -55,9 +56,11 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-svh flex-col">
         <ThemeProvider>
-          <Header />
-          <main className="flex flex-1">{children}</main>
-          <Toaster richColors closeButton />
+          <TooltipProvider>
+            <Header />
+            <main className="flex flex-1">{children}</main>
+            <Toaster richColors closeButton />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
