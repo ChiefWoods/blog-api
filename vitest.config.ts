@@ -1,5 +1,12 @@
+import { fileURLToPath } from "node:url";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
+
+const rootPath = fileURLToPath(new URL("./", import.meta.url));
+const projectAlias = {
+  "@": rootPath,
+  "@/": rootPath,
+};
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -9,6 +16,7 @@ export default defineConfig({
         test: {
           name: "unit",
           environment: "node",
+          alias: projectAlias,
           include: ["tests/unit/**/*.test.ts"],
         },
       },
@@ -16,10 +24,7 @@ export default defineConfig({
         test: {
           name: "dom",
           environment: "jsdom",
-          alias: {
-            "@": new URL("./", import.meta.url).pathname,
-            "@/": new URL("./", import.meta.url).pathname,
-          },
+          alias: projectAlias,
           setupFiles: ["tests/dom/setup.ts"],
           include: ["tests/dom/**/*.test.{ts,tsx}"],
         },
