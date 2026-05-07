@@ -41,6 +41,7 @@ export function SignUpForm() {
         disableSignal: true,
         onSuccess: () => {
           router.replace(callbackURL);
+          router.refresh();
         },
         onError: (ctx) => {
           toast.error(

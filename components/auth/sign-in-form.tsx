@@ -45,6 +45,7 @@ export function SignInForm() {
         disableSignal: true,
         onSuccess: () => {
           router.replace(callbackURL);
+          router.refresh();
         },
         onError: (ctx) => {
           toast.error(getErrorMessage(ctx.error, "Unable to sign in. Please try again."));
