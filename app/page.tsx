@@ -13,7 +13,7 @@ export default async function Page() {
       <div className="space-y-2">
         <h1 className="font-heading text-3xl leading-tight sm:text-4xl">Latest posts</h1>
         <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-          Browse published posts. Open any post to read details and join the discussion.
+          Open any post to read details and join the discussion.
         </p>
       </div>
 
