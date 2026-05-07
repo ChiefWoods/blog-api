@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 const rootPath = fileURLToPath(new URL("./", import.meta.url));
@@ -9,7 +8,6 @@ const projectAlias = {
 };
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
   test: {
     projects: [
       {
