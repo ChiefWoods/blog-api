@@ -1,0 +1,2 @@
+ALTER TABLE "Post"
+DROP COLUMN IF EXISTS "contentHtml";

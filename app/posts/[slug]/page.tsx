@@ -8,8 +8,8 @@ import { DeleteCommentForm } from "@/components/posts/delete-comment-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "@/lib/auth";
+import { renderPostContent } from "@/lib/post-content";
 import { formatDateTime } from "@/lib/utils";
-import { extractPostBodyText } from "@/lib/utils";
 import { createServerCaller } from "@/src/trpc/server";
 
 type PostPageProps = {
@@ -33,7 +33,7 @@ export default async function PostPage({ params }: PostPageProps) {
   }
   const postId = post.id;
 
-  const bodyText = extractPostBodyText(post.contentJson);
+  const renderedBody = await renderPostContent(post.contentJson);
   const authorDisplayName = post.author.name?.trim() || `@${post.author.username}`;
   const isUnpublished = !post.published;
   const unpublishedState = post.publishedAt ? "hidden" : "draft";
@@ -42,7 +42,7 @@ export default async function PostPage({ params }: PostPageProps) {
     post.updatedAt.getTime() === publicationDate.getTime() ? "Published" : "Updated";
 
   return (
-    <div className="min-h-svh w-full bg-muted/35 px-4 py-10 sm:px-6 sm:py-14">
+    <div className="w-full bg-muted/35 px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto w-full max-w-2xl">
         <BackToPostsLink />
       </div>
@@ -78,12 +78,8 @@ export default async function PostPage({ params }: PostPageProps) {
             <p className="text-base leading-8 text-muted-foreground italic">{post.excerpt}</p>
           )}
 
-          <section className="text-[1.075rem] leading-9 text-foreground/95 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-5 [&_blockquote]:italic [&_h2]:mt-10 [&_h2]:font-heading [&_h2]:text-3xl [&_h3]:mt-8 [&_h3]:font-heading [&_h3]:text-2xl [&_p]:mb-8 [&_ul]:my-7 [&_ul]:list-disc [&_ul]:pl-7">
-            {post.contentHtml ? (
-              <div dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
-            ) : (
-              <p className="whitespace-pre-wrap">{bodyText || "No content provided."}</p>
-            )}
+          <section className="text-[1.075rem] leading-9 text-foreground/95 [&_.react-tweet-theme]:my-8 [&_blockquote]:my-6 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-5 [&_blockquote]:italic [&_h2]:mt-10 [&_h2]:font-heading [&_h2]:text-3xl [&_h3]:mt-8 [&_h3]:font-heading [&_h3]:text-2xl [&_iframe]:my-8 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-md [&_iframe]:border [&_iframe]:border-border [&_ol]:my-7 [&_ol]:list-decimal [&_ol]:pl-7 [&_p]:mb-8 [&_table]:my-8 [&_table]:w-full [&_table]:border-collapse [&_table_p]:mb-0 [&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-border [&_th]:bg-muted/50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:my-7 [&_ul]:list-disc [&_ul]:pl-7 [&_ul[data-list-type='check']]:list-none [&_ul[data-list-type='check']]:pl-0 [&_ul[data-list-type='check']>li]:my-2">
+            {renderedBody}
           </section>
 
           <div className="flex items-center justify-end border-y border-border/80 py-3">

@@ -20,7 +20,6 @@ const mutablePostFields = z.object({
   slug: z.string().min(1).max(200).optional(),
   excerpt: z.string().max(500).nullable().optional(),
   contentJson: z.custom<Prisma.InputJsonValue>().optional(),
-  contentHtml: z.string().nullable().optional(),
 });
 
 function throwPostConflictError(): never {
@@ -119,7 +118,6 @@ export const postRouter = router({
           excerpt: true,
           published: true,
           contentJson: true,
-          contentHtml: true,
           publishedAt: true,
           createdAt: true,
           updatedAt: true,
@@ -252,7 +250,6 @@ export const postRouter = router({
             slug: input.slug,
             excerpt: input.excerpt ?? null,
             contentJson: input.contentJson,
-            contentHtml: input.contentHtml ?? null,
             published: input.published,
             publishedAt: input.published ? new Date() : null,
             authorId: ctx.user.id,
@@ -302,7 +299,6 @@ export const postRouter = router({
             slug: input.slug,
             excerpt: input.excerpt,
             contentJson: input.contentJson,
-            contentHtml: input.contentHtml,
           },
         });
       } catch (error) {

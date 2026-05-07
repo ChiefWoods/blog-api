@@ -3,6 +3,8 @@
 import { TRPCError } from "@trpc/server";
 import { revalidatePath } from "next/cache";
 
+import type { Prisma } from "@/generated/prisma/client";
+
 import { requireAdmin, requireAuth } from "@/lib/auth";
 import {
   createPostFormSchema,
@@ -12,8 +14,6 @@ import {
   updatePostFormSchema,
 } from "@/lib/form-schema";
 import { createServerCaller } from "@/src/trpc/server";
-
-import { buildPostContentPayload } from "./utils";
 
 type PostConflictField = "slug";
 
@@ -61,7 +61,6 @@ export async function createPostAction(
 
   const values = createPostFormSchema.parse(input);
   const slug = normalizeSlug(values.slug);
-  const { contentJson, contentHtml } = buildPostContentPayload(values.content);
 
   const actionCaller = await createServerCaller();
   let post: Awaited<ReturnType<typeof actionCaller.post.create>>;
@@ -70,8 +69,7 @@ export async function createPostAction(
       title: values.title,
       slug,
       excerpt: values.excerpt.trim() ? values.excerpt : null,
-      contentJson,
-      contentHtml,
+      contentJson: values.contentJson as unknown as Prisma.InputJsonValue,
       published: values.published,
     });
   } catch (error) {
@@ -102,7 +100,6 @@ export async function updatePostAction(
 
   const values = updatePostFormSchema.parse(input);
   const slug = normalizeSlug(values.slug);
-  const { contentJson, contentHtml } = buildPostContentPayload(values.content);
 
   const actionCaller = await createServerCaller();
   let updatedPost: Awaited<ReturnType<typeof actionCaller.post.update>>;
@@ -112,8 +109,7 @@ export async function updatePostAction(
       title: values.title,
       slug,
       excerpt: values.excerpt.trim() ? values.excerpt : null,
-      contentJson,
-      contentHtml,
+      contentJson: values.contentJson as unknown as Prisma.InputJsonValue,
     });
   } catch (error) {
     const conflict = mapPostConflictResult(error);
@@ -151,7 +147,6 @@ export async function updateAndPublishPostAction(
 
   const values = updatePostFormSchema.parse(input);
   const slug = normalizeSlug(values.slug);
-  const { contentJson, contentHtml } = buildPostContentPayload(values.content);
 
   const actionCaller = await createServerCaller();
   try {
@@ -160,8 +155,7 @@ export async function updateAndPublishPostAction(
       title: values.title,
       slug,
       excerpt: values.excerpt.trim() ? values.excerpt : null,
-      contentJson,
-      contentHtml,
+      contentJson: values.contentJson as unknown as Prisma.InputJsonValue,
     });
   } catch (error) {
     const conflict = mapPostConflictResult(error);

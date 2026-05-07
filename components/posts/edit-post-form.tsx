@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { Editor, plainTextToSerializedEditorState } from "@/components/editor-x";
+import { Editor } from "@/components/editor-x";
 import { SlugInput } from "@/components/slug-input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -43,8 +43,8 @@ export function EditPostForm({
     defaultValues: initialValues,
   });
   const initialContentState = useMemo(
-    () => initialSerializedContent ?? plainTextToSerializedEditorState(initialValues.content),
-    [initialSerializedContent, initialValues.content],
+    () => initialSerializedContent ?? initialValues.contentJson,
+    [initialSerializedContent, initialValues.contentJson],
   );
 
   async function submitWithIntent(intent: "save" | "publish") {
@@ -137,7 +137,7 @@ export function EditPostForm({
         />
 
         <Controller
-          name="content"
+          name="contentJson"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
@@ -148,7 +148,7 @@ export function EditPostForm({
                   contentEditableId="edit-post-content"
                   contentAriaInvalid={fieldState.invalid}
                   contentAriaDescribedBy="edit-post-content-error"
-                  onPlainTextChange={field.onChange}
+                  onSerializedChange={field.onChange}
                 />
                 <FieldError id="edit-post-content-error">{fieldState.error?.message}</FieldError>
               </FieldContent>

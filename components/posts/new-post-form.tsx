@@ -26,7 +26,7 @@ export function NewPostForm() {
       title: "",
       slug: "",
       excerpt: "",
-      content: "",
+      contentJson: plainTextToSerializedEditorState(""),
       published: true,
     },
   });
@@ -111,7 +111,7 @@ export function NewPostForm() {
         />
 
         <Controller
-          name="content"
+          name="contentJson"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
@@ -122,7 +122,7 @@ export function NewPostForm() {
                   contentEditableId="new-post-content"
                   contentAriaInvalid={fieldState.invalid}
                   contentAriaDescribedBy="new-post-content-error"
-                  onPlainTextChange={field.onChange}
+                  onSerializedChange={field.onChange}
                 />
                 <FieldError id="new-post-content-error">{fieldState.error?.message}</FieldError>
               </FieldContent>

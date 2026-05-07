@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono, Merriweather } from "next/font/google";
 
 import "./globals.css";
+import "react-tweet/theme.css";
 import Script from "next/script";
 
 import { Header } from "@/components/header";
