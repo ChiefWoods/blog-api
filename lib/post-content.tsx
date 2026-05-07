@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import parse from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
 import { JSDOM } from "jsdom";
-import { Tweet, TweetNotFound } from "react-tweet";
+import { Tweet } from "react-tweet";
 
 import {
   extractLexicalSerializedState,
@@ -61,12 +61,12 @@ function parseContentHtml(html: string): ReactNode {
       };
 
       if (tagNode.type !== "tag" || tagNode.name !== "tweet-embed") {
-        return <TweetNotFound />;
+        return null;
       }
 
       const tweetId = tagNode.attribs?.["data-tweet-id"];
       if (!tweetId) {
-        return <TweetNotFound />;
+        return null;
       }
 
       return <Tweet id={tweetId} />;
