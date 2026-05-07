@@ -1,3 +1,5 @@
+"use client";
+
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import {
   AutoFocusExtension,
@@ -25,12 +27,13 @@ import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { RichTextExtension } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 import {
+  $getRoot,
   type EditorState,
   type SerializedEditorState,
   configExtension,
   defineExtension,
 } from "lexical";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { ContentEditable } from "@/components/editor/editor-ui/content-editable";
 import { DateTimeExtension } from "@/components/editor/extensions/date-time-extension";
@@ -69,6 +72,23 @@ import { FloatingLinkEditorPlugin } from "@/components/editor/plugins/floating-l
 import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-plugin";
 import { LayoutPlugin } from "@/components/editor/plugins/layout-plugin";
 import { MentionsPlugin } from "@/components/editor/plugins/mentions-plugin";
+import { AlignmentPickerPlugin } from "@/components/editor/plugins/picker/alignment-picker-plugin";
+import { BulletedListPickerPlugin } from "@/components/editor/plugins/picker/bulleted-list-picker-plugin";
+import { CheckListPickerPlugin } from "@/components/editor/plugins/picker/check-list-picker-plugin";
+import { CodePickerPlugin } from "@/components/editor/plugins/picker/code-picker-plugin";
+import { ColumnsLayoutPickerPlugin } from "@/components/editor/plugins/picker/columns-layout-picker-plugin";
+import { DateTimePickerPlugin } from "@/components/editor/plugins/picker/date-time-picker-plugin";
+import { DividerPickerPlugin } from "@/components/editor/plugins/picker/divider-picker-plugin";
+import { EmbedsPickerPlugin } from "@/components/editor/plugins/picker/embeds-picker-plugin";
+import { HeadingPickerPlugin } from "@/components/editor/plugins/picker/heading-picker-plugin";
+import { ImagePickerPlugin } from "@/components/editor/plugins/picker/image-picker-plugin";
+import { NumberedListPickerPlugin } from "@/components/editor/plugins/picker/numbered-list-picker-plugin";
+import { ParagraphPickerPlugin } from "@/components/editor/plugins/picker/paragraph-picker-plugin";
+import { QuotePickerPlugin } from "@/components/editor/plugins/picker/quote-picker-plugin";
+import {
+  DynamicTablePickerPlugin,
+  TablePickerPlugin,
+} from "@/components/editor/plugins/picker/table-picker-plugin";
 import { SpecialTextPlugin } from "@/components/editor/plugins/special-text-plugin";
 import { TabFocusPlugin } from "@/components/editor/plugins/tab-focus-plugin";
 import { BlockFormatDropDown } from "@/components/editor/plugins/toolbar/block-format-toolbar-plugin";
@@ -108,21 +128,97 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { plainTextToLexicalSerializedState } from "@/lib/utils";
 
 const placeholder = "Press / for commands...";
-const maxLength = 30;
+
+type EditorProps = {
+  editorState?: EditorState;
+  editorSerializedState?: SerializedEditorState;
+  onChange?: (editorState: EditorState) => void;
+  onSerializedChange?: (editorSerializedState: SerializedEditorState) => void;
+  onPlainTextChange?: (plainText: string) => void;
+  contentEditableId?: string;
+  contentAriaInvalid?: boolean;
+  contentAriaDescribedBy?: string;
+  contentClassName?: string;
+  maxLength?: number;
+};
+
+export function plainTextToSerializedEditorState(content: string): SerializedEditorState {
+  const lines = content.split("\n");
+
+  return {
+    root: {
+      children: lines.map((line) => ({
+        type: "paragraph",
+        version: 1,
+        format: "",
+        indent: 0,
+        direction: null,
+        textFormat: 0,
+        textStyle: "",
+        children: line
+          ? [
+              {
+                detail: 0,
+                format: 0,
+                mode: "normal",
+                style: "",
+                text: line,
+                type: "text",
+                version: 1,
+              },
+            ]
+          : [],
+      })),
+      direction: null,
+      format: "",
+      indent: 0,
+      type: "root",
+      version: 1,
+    },
+  };
+}
 
 export function Editor({
   editorState,
   editorSerializedState,
   onChange,
   onSerializedChange,
-}: {
-  editorState?: EditorState;
-  editorSerializedState?: SerializedEditorState;
-  onChange?: (editorState: EditorState) => void;
-  onSerializedChange?: (editorSerializedState: SerializedEditorState) => void;
-}) {
+  onPlainTextChange,
+  contentEditableId,
+  contentAriaInvalid,
+  contentAriaDescribedBy,
+  contentClassName = "max-h-96 min-h-48 overflow-y-auto pl-4",
+  maxLength = 20000,
+}: EditorProps) {
   const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null);
   const [isLinkEditMode, setIsLinkEditMode] = useState<boolean>(false);
+  const componentPickerBaseOptions = useMemo(
+    () => [
+      ParagraphPickerPlugin(),
+      ...([1, 2, 3] as const).map((n) => HeadingPickerPlugin({ n })),
+      BulletedListPickerPlugin(),
+      NumberedListPickerPlugin(),
+      CheckListPickerPlugin(),
+      QuotePickerPlugin(),
+      CodePickerPlugin(),
+      DividerPickerPlugin(),
+      TablePickerPlugin(),
+      ImagePickerPlugin(),
+      DateTimePickerPlugin(),
+      ColumnsLayoutPickerPlugin(),
+      EmbedsPickerPlugin({ embed: "youtube-video" }),
+      EmbedsPickerPlugin({ embed: "tweet" }),
+      AlignmentPickerPlugin({ alignment: "left" }),
+      AlignmentPickerPlugin({ alignment: "center" }),
+      AlignmentPickerPlugin({ alignment: "right" }),
+      AlignmentPickerPlugin({ alignment: "justify" }),
+    ],
+    [],
+  );
+  const componentPickerDynamicOptions = useCallback(
+    ({ queryString }: { queryString: string }) => DynamicTablePickerPlugin({ queryString }),
+    [],
+  );
 
   const onRef = (_floatingAnchorElem: HTMLDivElement) => {
     if (_floatingAnchorElem !== null) {
@@ -188,14 +284,15 @@ export function Editor({
         ],
         $initialEditorState(editor) {
           if (editorSerializedState) {
-            editor.parseEditorState(editorSerializedState);
+            const parsedEditorState = editor.parseEditorState(editorSerializedState);
+            editor.setEditorState(parsedEditorState);
           } else if (editorState) {
             editor.setEditorState(editorState);
           }
         },
         theme: editorTheme,
       }),
-    [editorState, editorSerializedState],
+    [editorState, editorSerializedState, maxLength],
   );
 
   return (
@@ -246,12 +343,18 @@ export function Editor({
               <div className="">
                 <div className="" ref={onRef}>
                   <ContentEditable
+                    id={contentEditableId}
+                    ariaInvalid={contentAriaInvalid}
+                    ariaDescribedBy={contentAriaDescribedBy}
                     placeholder={placeholder}
-                    className="h-[calc(100vh-141px)] pl-4"
+                    className={contentClassName}
                   />
                 </div>
               </div>
-              <ComponentPickerMenuPlugin baseOptions={[]} />
+              <ComponentPickerMenuPlugin
+                baseOptions={componentPickerBaseOptions}
+                dynamicOptionsFn={componentPickerDynamicOptions}
+              />
               <EmojiPickerPlugin />
               <AutoEmbedPlugin />
               <MentionsPlugin />
@@ -265,7 +368,11 @@ export function Editor({
               <LayoutPlugin />
               <TwitterPlugin />
               <YouTubePlugin />
-              <DraggableBlockPlugin anchorElem={floatingAnchorElem} baseOptions={[]} />
+              <DraggableBlockPlugin
+                anchorElem={floatingAnchorElem}
+                baseOptions={componentPickerBaseOptions}
+                dynamicOptionsFn={componentPickerDynamicOptions}
+              />
               <FloatingTextFormatToolbarPlugin
                 anchorElem={floatingAnchorElem}
                 setIsLinkEditMode={setIsLinkEditMode}
@@ -317,6 +424,11 @@ export function Editor({
             onChange={(editorState) => {
               onChange?.(editorState);
               onSerializedChange?.(editorState.toJSON());
+              onPlainTextChange?.(
+                editorState.read(() => {
+                  return $getRoot().getTextContent();
+                }),
+              );
             }}
           />
         </TooltipProvider>
