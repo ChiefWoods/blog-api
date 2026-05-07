@@ -1,6 +1,7 @@
 import { defineConfig } from "oxfmt";
 
 export default defineConfig({
+  ignorePatterns: [".next/**", "components/ui/**", "node_modules/**", "generated/**"],
   sortImports: {
     groups: [
       "type-import",
@@ -15,7 +16,6 @@ export default defineConfig({
   overrides: [
     {
       files: ["**/*.{js,jsx,ts,tsx,md,mdx,html}"],
-      excludeFiles: ["components/ui/**"],
       options: {
         sortTailwindcss: {
           stylesheet: "./app/globals.css",
