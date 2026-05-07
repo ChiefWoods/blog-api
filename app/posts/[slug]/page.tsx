@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackToPostsLink } from "@/components/back-to-posts-link";
 import { PostShareButton } from "@/components/post-share-button";
 import { CreateCommentForm } from "@/components/posts/create-comment-form";
 import { DeleteCommentForm } from "@/components/posts/delete-comment-form";
@@ -42,6 +43,10 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <div className="min-h-svh w-full bg-muted/35 px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto w-full max-w-2xl">
+        <BackToPostsLink />
+      </div>
+
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-12">
         <article className="mx-auto w-full max-w-2xl space-y-8">
           {isUnpublished && (
