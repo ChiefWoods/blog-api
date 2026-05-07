@@ -1,7 +1,7 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import { createTRPCContext } from "@/src/trpc/context";
-import { appRouter } from "@/src/trpc/routers/_app";
+import { createTRPCContext } from "@/trpc/context";
+import { appRouter } from "@/trpc/routers/_app";
 
 const ALLOWED_METHODS = "GET, POST, OPTIONS";
 const ALLOWED_HEADERS = "content-type, authorization, x-trpc-source";

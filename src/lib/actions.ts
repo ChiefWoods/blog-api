@@ -13,7 +13,7 @@ import {
   type UpdatePostFormValues,
   updatePostFormSchema,
 } from "@/lib/form-schema";
-import { createServerCaller } from "@/src/trpc/server";
+import { createServerCaller } from "@/trpc/server";
 
 type PostConflictField = "slug";
 

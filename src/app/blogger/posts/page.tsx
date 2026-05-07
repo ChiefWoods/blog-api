@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
-import { createServerCaller } from "@/src/trpc/server";
+import { createServerCaller } from "@/trpc/server";
 
 import { BloggerPostsTable } from "../../../components/blogger-posts-table";
 import { deleteAction, publishAction, unpublishAction } from "../../../lib/actions";

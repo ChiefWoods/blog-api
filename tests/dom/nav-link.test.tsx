@@ -3,7 +3,7 @@ import type React from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { NavLink } from "../../components/nav-link";
+import { NavLink } from "@/components/nav-link";
 
 const usePathnameMock = vi.fn();
 

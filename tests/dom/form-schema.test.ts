@@ -4,7 +4,7 @@ import {
   COMMENT_BODY_MAX_LENGTH,
   createCommentFormSchema,
   signUpFormSchema,
-} from "../../lib/form-schema";
+} from "@/lib/form-schema";
 
 describe("form schemas", () => {
   it("rejects sign-up username with invalid characters", () => {

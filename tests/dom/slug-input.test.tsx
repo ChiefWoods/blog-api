@@ -3,7 +3,7 @@ import type React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { SlugInput } from "../../components/slug-input";
+import { SlugInput } from "@/components/slug-input";
 
 vi.mock("@/components/ui/input", () => ({
   Input: ({ onInput, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => (

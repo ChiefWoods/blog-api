@@ -1,10 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-const rootPath = fileURLToPath(new URL("./", import.meta.url));
+const rootPath = fileURLToPath(new URL("./src", import.meta.url));
 const projectAlias = {
   "@": rootPath,
-  "@/": rootPath,
+  "@/": `${rootPath}/`,
 };
 
 export default defineConfig({

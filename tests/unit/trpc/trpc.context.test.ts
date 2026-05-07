@@ -25,7 +25,7 @@ describe("createTRPCContext", () => {
   it("returns unauthenticated context when session lookup fails", async () => {
     getSessionMock.mockRejectedValue(new Error("session failed"));
 
-    const { createTRPCContext } = await import("@/src/trpc/context");
+    const { createTRPCContext } = await import("@/trpc/context");
     const ctx = await createTRPCContext({ req: new Request("http://localhost/api/trpc") });
 
     expect(ctx.isAuthenticated).toBe(false);
@@ -44,7 +44,7 @@ describe("createTRPCContext", () => {
     });
     getIsAdminByUserIdMock.mockResolvedValue(true);
 
-    const { createTRPCContext } = await import("@/src/trpc/context");
+    const { createTRPCContext } = await import("@/trpc/context");
     const req = new Request("http://localhost/api/trpc");
 
     const ctx = await createTRPCContext({ req });
@@ -65,7 +65,7 @@ describe("createTRPCContext", () => {
     });
     getIsAdminByUserIdMock.mockResolvedValue(false);
 
-    const { createTRPCContext } = await import("@/src/trpc/context");
+    const { createTRPCContext } = await import("@/trpc/context");
     const ctx = await createTRPCContext({ req: new Request("http://localhost/api/trpc") });
 
     expect(ctx.isAuthenticated).toBe(true);

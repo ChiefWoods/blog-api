@@ -10,7 +10,7 @@ import {
   formatDateTime,
   plainTextToLexicalSerializedState,
 } from "@/lib/utils";
-import { createServerCaller } from "@/src/trpc/server";
+import { createServerCaller } from "@/trpc/server";
 
 type EditPostPageProps = {
   params: Promise<{

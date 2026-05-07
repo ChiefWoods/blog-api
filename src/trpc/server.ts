@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
-import { createTRPCContext } from "@/src/trpc/context";
-import { appRouter } from "@/src/trpc/routers/_app";
+import { createTRPCContext } from "@/trpc/context";
+import { appRouter } from "@/trpc/routers/_app";
 
 function getRequestUrl(requestHeaders: Headers) {
   const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";

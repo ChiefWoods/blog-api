@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { adminProcedure, protectedProcedure, router } from "@/src/trpc/init";
+import { adminProcedure, protectedProcedure, router } from "@/trpc/init";
 
 export const commentRouter = router({
   create: protectedProcedure

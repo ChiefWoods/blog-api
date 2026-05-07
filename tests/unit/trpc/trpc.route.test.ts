@@ -7,7 +7,7 @@ vi.mock("@trpc/server/adapters/fetch", () => ({
   fetchRequestHandler: fetchRequestHandlerMock,
 }));
 
-vi.mock("@/src/trpc/context", () => ({
+vi.mock("@/trpc/context", () => ({
   createTRPCContext: createTRPCContextMock,
 }));
 

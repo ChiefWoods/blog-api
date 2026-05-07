@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getServerSession } from "@/lib/auth";
 import { renderPostContent } from "@/lib/post-content";
 import { formatDateTime } from "@/lib/utils";
-import { createServerCaller } from "@/src/trpc/server";
+import { createServerCaller } from "@/trpc/server";
 
 type PostPageProps = {
   params: Promise<{

@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { appRouter } from "@/src/trpc/routers/_app";
+import { appRouter } from "@/trpc/routers/_app";
 
 function createMockContext(overrides?: Partial<Record<string, unknown>>) {
   return {

@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import type { Prisma } from "@/generated/prisma/client";
 
-import { adminProcedure, publicProcedure, router } from "@/src/trpc/init";
+import { adminProcedure, publicProcedure, router } from "@/trpc/init";
 
 const listPublishedInput = z.object({
   cursor: z.string().optional(),

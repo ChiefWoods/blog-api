@@ -1,6 +1,6 @@
-import { router } from "@/src/trpc/init";
-import { commentRouter } from "@/src/trpc/routers/comment";
-import { postRouter } from "@/src/trpc/routers/post";
+import { router } from "@/trpc/init";
+import { commentRouter } from "@/trpc/routers/comment";
+import { postRouter } from "@/trpc/routers/post";
 
 export const appRouter = router({
   post: postRouter,
