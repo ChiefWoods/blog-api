@@ -1,3 +1,5 @@
+import type { SerializedEditorState } from "lexical";
+
 import { z } from "zod";
 
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from "@/lib/auth-constants";
@@ -14,6 +16,22 @@ const requiredText = (label: string, maxLength: number) =>
     .min(1, `${label} is required.`)
     .max(maxLength, `${label} must be ${maxLength} characters or fewer.`);
 
+function isLexicalSerializedState(value: unknown): value is SerializedEditorState {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const root = (value as { root?: unknown }).root;
+  if (!root || typeof root !== "object") {
+    return false;
+  }
+
+  return (
+    (root as { type?: unknown }).type === "root" &&
+    Array.isArray((root as { children?: unknown }).children)
+  );
+}
+
 export function normalizeSlug(value: string) {
   return value.trim().replace(/\s+/g, "-");
 }
@@ -27,7 +45,7 @@ export const postBaseFormSchema = z.object({
       POST_EXCERPT_MAX_LENGTH,
       `Excerpt must be ${POST_EXCERPT_MAX_LENGTH} characters or fewer.`,
     ),
-  content: z.string(),
+  contentJson: z.custom<SerializedEditorState>(isLexicalSerializedState, "Content is invalid."),
 });
 
 export const createPostFormSchema = postBaseFormSchema.extend({
