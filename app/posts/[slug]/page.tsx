@@ -36,6 +36,9 @@ export default async function PostPage({ params }: PostPageProps) {
   const authorDisplayName = post.author.name?.trim() || `@${post.author.username}`;
   const isUnpublished = !post.published;
   const unpublishedState = post.publishedAt ? "hidden" : "draft";
+  const publicationDate = post.publishedAt ?? post.createdAt;
+  const postTimestampLabel =
+    post.updatedAt.getTime() === publicationDate.getTime() ? "Published" : "Updated";
 
   return (
     <div className="min-h-svh w-full bg-muted/35 px-4 py-10 sm:px-6 sm:py-14">
@@ -54,20 +57,17 @@ export default async function PostPage({ params }: PostPageProps) {
             </Alert>
           )}
 
-          <header className="space-y-6">
-            <p className="text-[11px] font-medium tracking-[0.22em] text-muted-foreground uppercase">
-              Blog post • {formatDateTime(post.publishedAt ?? post.createdAt)}
-            </p>
+          <section className="space-y-6">
             <h1 className="font-heading text-4xl leading-tight tracking-tight text-foreground sm:text-5xl">
               {post.title}
             </h1>
             <div className="border-t border-border/80 pt-5">
               <p className="text-base font-medium text-foreground">{authorDisplayName}</p>
               <p className="mt-1 text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                Updated {formatDateTime(post.updatedAt)}
+                {postTimestampLabel} {formatDateTime(post.updatedAt)}
               </p>
             </div>
-          </header>
+          </section>
 
           {post.excerpt && (
             <p className="text-base leading-8 text-muted-foreground italic">{post.excerpt}</p>
