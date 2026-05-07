@@ -34,6 +34,7 @@ describe("/api/auth/[...all] route", () => {
     authGetMock.mockReset();
     authPostMock.mockReset();
     delete process.env.CORS_ALLOWED_ORIGINS;
+    delete process.env.BASE_URL;
   });
 
   it("handles preflight OPTIONS with CORS headers for allowed origins", async () => {
@@ -115,5 +116,28 @@ describe("/api/auth/[...all] route", () => {
     expect(authPostMock).toHaveBeenCalledTimes(1);
     expect(authPostMock).toHaveBeenCalledWith(req);
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://allowed.example");
+  });
+
+  it("uses BASE_URL as the default allowed origin when CORS_ALLOWED_ORIGINS is unset", async () => {
+    process.env.BASE_URL = "https://base.example";
+    authGetMock.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const req = new Request("http://localhost/api/auth/session", {
+      method: "GET",
+      headers: {
+        origin: "https://base.example",
+      },
+    });
+
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    expect(authGetMock).toHaveBeenCalledTimes(1);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://base.example");
   });
 });

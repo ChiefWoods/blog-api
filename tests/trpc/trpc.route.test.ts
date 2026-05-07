@@ -25,6 +25,7 @@ describe("/api/trpc/[trpc] route", () => {
     fetchRequestHandlerMock.mockReset();
     createTRPCContextMock.mockReset();
     delete process.env.CORS_ALLOWED_ORIGINS;
+    delete process.env.BASE_URL;
   });
 
   it("handles preflight OPTIONS with CORS headers for allowed origins", async () => {
@@ -95,5 +96,29 @@ describe("/api/trpc/[trpc] route", () => {
 
     await handlerArg.createContext();
     expect(createTRPCContextMock).toHaveBeenCalledWith({ req });
+  });
+
+  it("uses BASE_URL as the default allowed origin when CORS_ALLOWED_ORIGINS is unset", async () => {
+    process.env.BASE_URL = "https://base.example";
+    fetchRequestHandlerMock.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    createTRPCContextMock.mockResolvedValue({ id: "ctx" });
+
+    const req = new Request("http://localhost/api/trpc/post.listPublished", {
+      method: "GET",
+      headers: {
+        origin: "https://base.example",
+      },
+    });
+
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://base.example");
+    expect(fetchRequestHandlerMock).toHaveBeenCalledTimes(1);
   });
 });

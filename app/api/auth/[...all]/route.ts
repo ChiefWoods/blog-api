@@ -10,11 +10,16 @@ function getAllowedOrigins() {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  if (!configuredOrigins?.length) {
-    return ["*"];
+  if (configuredOrigins?.length) {
+    return configuredOrigins;
   }
 
-  return configuredOrigins;
+  const baseUrlOrigin = process.env.BASE_URL?.trim();
+  if (baseUrlOrigin) {
+    return [baseUrlOrigin];
+  }
+
+  return [];
 }
 
 function resolveCorsOrigin(origin: string | null) {
@@ -22,10 +27,6 @@ function resolveCorsOrigin(origin: string | null) {
 
   if (!origin) {
     return null;
-  }
-
-  if (allowedOrigins.includes("*")) {
-    return "*";
   }
 
   if (allowedOrigins.includes(origin)) {
