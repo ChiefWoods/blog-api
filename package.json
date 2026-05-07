@@ -28,6 +28,7 @@
     "docker:test-db:stop": "docker compose stop test-db",
     "docker:test-db:down": "docker compose --profile test down",
     "docker:test-db:reset": "docker compose --profile test down -v",
+    "ci": "act pull_request -W .github/workflows/ci.yml --env-file .env.production",
     "db:migrate": "bunx --bun prisma migrate dev --name init",
     "db:generate": "bunx --bun prisma generate",
     "db:studio": "bunx --bun prisma studio",
