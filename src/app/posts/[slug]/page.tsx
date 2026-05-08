@@ -131,7 +131,9 @@ export default async function PostPage({ params }: PostPageProps) {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <CardTitle className="text-base">@{comment.author.username}</CardTitle>
+                      <CardTitle className="text-base">
+                        @{comment.author.displayUsername ?? comment.author.name}
+                      </CardTitle>
                       <CardDescription>{formatDateTime(comment.createdAt)}</CardDescription>
                     </div>
                     {isAdmin ? <DeleteCommentForm commentId={comment.id} path={path} /> : null}
