@@ -2,6 +2,7 @@
   background-color: transparent;
   font-family: Menlo, Consolas, Monaco, monospace;
   display: block;
+  max-width: 100%;
   padding: 8px 8px 8px 52px;
   line-height: 1.53;
   font-size: 13px;
@@ -9,10 +10,19 @@
   margin-top: 8px;
   margin-bottom: 8px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   border: 1px solid #ccc;
   position: relative;
   border-radius: 8px;
   tab-size: 2;
+}
+
+code.PlaygroundEditorTheme__code,
+code.EditorTheme__code {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 .EditorTheme__code:before {
   content: attr(data-gutter);
