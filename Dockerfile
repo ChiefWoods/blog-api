@@ -19,7 +19,9 @@ RUN bun run build
 
 FROM oven/bun:1.3.13
 COPY ./package.json bun.lock /app/
+COPY ./next.config.mjs /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/.output /app/.output
+COPY --from=build-env /app/.next /app/.next
+COPY --from=build-env /app/public /app/public
 WORKDIR /app
-CMD ["bun", "run", "start"]
+CMD ["sh", "-c", "bun run start -- -p ${PORT:-4000}"]
