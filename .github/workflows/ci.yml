@@ -11,6 +11,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+
 jobs:
   verify:
     name: Lint, Format, Build, Unit, DOM
@@ -42,8 +45,6 @@ jobs:
 
       - name: Generate Prisma client
         run: bun run db:generate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
 
       - name: Build
         run: bun run build
