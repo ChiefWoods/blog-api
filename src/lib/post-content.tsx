@@ -11,6 +11,13 @@ import {
 } from "@/lib/utils";
 
 let lexicalDomInitialized = false;
+const TEXT_FORMAT_BOLD = 1;
+const TEXT_FORMAT_ITALIC = 1 << 1;
+const TEXT_FORMAT_STRIKETHROUGH = 1 << 2;
+const TEXT_FORMAT_UNDERLINE = 1 << 3;
+const TEXT_FORMAT_CODE = 1 << 4;
+const TEXT_FORMAT_SUBSCRIPT = 1 << 5;
+const TEXT_FORMAT_SUPERSCRIPT = 1 << 6;
 const SUPPORTED_NODE_TYPES = new Set([
   "root",
   "paragraph",
@@ -42,8 +49,11 @@ const SANITIZE_OPTIONS = {
     "allow",
     "allowfullscreen",
     "frameborder",
+    "href",
     "loading",
+    "rel",
     "referrerpolicy",
+    "target",
     "title",
     "data-tweet-id",
   ],
@@ -112,6 +122,54 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function getTextNodeFormat(node: Record<string, unknown>): number {
+  if (typeof node.format === "number") {
+    return node.format;
+  }
+
+  if (typeof node.format === "string") {
+    const parsed = Number.parseInt(node.format, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  return 0;
+}
+
+function renderFormattedText(text: string, format: number): string {
+  let html = escapeHtml(text);
+
+  if (format & TEXT_FORMAT_CODE) {
+    html = `<code>${html}</code>`;
+  }
+
+  if (format & TEXT_FORMAT_BOLD) {
+    html = `<strong>${html}</strong>`;
+  }
+
+  if (format & TEXT_FORMAT_ITALIC) {
+    html = `<em>${html}</em>`;
+  }
+
+  if (format & TEXT_FORMAT_STRIKETHROUGH) {
+    html = `<s>${html}</s>`;
+  }
+
+  if (format & TEXT_FORMAT_UNDERLINE) {
+    html = `<u>${html}</u>`;
+  }
+
+  const hasSubscript = (format & TEXT_FORMAT_SUBSCRIPT) !== 0;
+  const hasSuperscript = (format & TEXT_FORMAT_SUPERSCRIPT) !== 0;
+
+  if (hasSuperscript && !hasSubscript) {
+    html = `<sup>${html}</sup>`;
+  } else if (hasSubscript && !hasSuperscript) {
+    html = `<sub>${html}</sub>`;
+  }
+
+  return html;
 }
 
 function createTextNode(text: string): Record<string, unknown> {
@@ -190,7 +248,7 @@ function renderNodeToHtml(node: unknown, listContext: "check" | null = null): st
 
   if (type === "text" || type === "code-highlight") {
     const text = typeof node.text === "string" ? node.text : "";
-    return escapeHtml(text);
+    return renderFormattedText(text, getTextNodeFormat(node));
   }
 
   if (type === "linebreak") {
