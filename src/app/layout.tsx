@@ -25,6 +25,10 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  title: {
+    default: "Blogga",
+    template: "%s | Blogga",
+  },
   icons: {
     icon: [
       {

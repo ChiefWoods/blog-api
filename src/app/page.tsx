@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
+
 import Link from "next/link";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/utils";
 import { createServerCaller } from "@/trpc/server";
+
+export const metadata: Metadata = {
+  title: "Latest Posts | Blogga",
+};
 
 export default async function Page() {
   const caller = await createServerCaller();

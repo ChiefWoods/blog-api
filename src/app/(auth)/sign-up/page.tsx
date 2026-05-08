@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { AuthCard } from "@/components/auth/auth-card";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 import { requireGuest } from "@/lib/auth";
@@ -7,6 +9,10 @@ type SignUpPageProps = {
   searchParams?: Promise<{
     callbackURL?: string | string[];
   }>;
+};
+
+export const metadata: Metadata = {
+  title: "Sign Up",
 };
 
 export default async function SignUpPage({ searchParams }: SignUpPageProps) {

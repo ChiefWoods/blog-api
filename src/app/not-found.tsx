@@ -2,6 +2,7 @@
 
 import { SearchXIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,10 @@ import {
 
 export default function NotFoundPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    document.title = "Page Not Found | Blogga";
+  }, []);
 
   return (
     <section className="mx-auto flex w-full max-w-2xl items-center px-4 py-10 sm:px-6">

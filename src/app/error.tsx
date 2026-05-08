@@ -21,6 +21,10 @@ type ErrorPageProps = {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
   useEffect(() => {
+    document.title = "Something Went Wrong | Blogga";
+  }, []);
+
+  useEffect(() => {
     console.error(error);
   }, [error]);
 

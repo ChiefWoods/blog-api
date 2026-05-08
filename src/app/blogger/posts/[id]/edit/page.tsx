@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
+
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { BackToDashboardLink } from "@/components/back-to-dashboard-link";
 import { EditPostForm } from "@/components/posts/edit-post-form";
@@ -18,13 +21,29 @@ type EditPostPageProps = {
   }>;
 };
 
+const getPostById = cache(async (id: string) => {
+  const caller = await createServerCaller();
+  return caller.post.getById({ id });
+});
+
+export async function generateMetadata({ params }: EditPostPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const post = await getPostById(id);
+
+  if (!post) {
+    return { title: "Edit Post" };
+  }
+
+  return {
+    title: `Edit: ${post.title}`,
+  };
+}
+
 export default async function EditPostPage({ params }: EditPostPageProps) {
   await requireAdmin();
 
   const { id } = await params;
-
-  const caller = await createServerCaller();
-  const post = await caller.post.getById({ id });
+  const post = await getPostById(id);
 
   if (!post) {
     notFound();

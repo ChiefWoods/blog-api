@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { ShieldAlertIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -10,6 +12,10 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+
+export const metadata: Metadata = {
+  title: "Authentication Required",
+};
 
 export default function UnauthorizedPage() {
   return (

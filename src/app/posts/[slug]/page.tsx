@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { BackToPostsLink } from "@/components/back-to-posts-link";
 import { PostShareButton } from "@/components/post-share-button";
@@ -18,16 +21,34 @@ type PostPageProps = {
   }>;
 };
 
+const getPostBySlug = cache(async (slug: string) => {
+  const caller = await createServerCaller();
+  return caller.post.getBySlug({ slug });
+});
+
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+
+  try {
+    const post = await getPostBySlug(slug);
+    return {
+      title: post.title,
+      description: post.excerpt ?? undefined,
+    };
+  } catch {
+    return { title: "Post Not Found" };
+  }
+}
+
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const caller = await createServerCaller();
   const session = await getServerSession();
   const isAdmin = Boolean((session?.user as { isAdmin?: boolean } | null)?.isAdmin);
   const path = `/posts/${slug}`;
 
-  let post: Awaited<ReturnType<typeof caller.post.getBySlug>>;
+  let post: Awaited<ReturnType<typeof getPostBySlug>>;
   try {
-    post = await caller.post.getBySlug({ slug });
+    post = await getPostBySlug(slug);
   } catch {
     notFound();
   }

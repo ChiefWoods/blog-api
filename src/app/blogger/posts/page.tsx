@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -8,6 +10,10 @@ import { createServerCaller } from "@/trpc/server";
 
 import { BloggerPostsTable } from "../../../components/blogger-posts-table";
 import { deleteAction, publishAction, unpublishAction } from "../../../lib/actions";
+
+export const metadata: Metadata = {
+  title: "Manage Posts",
+};
 
 export default async function BloggerPostsPage() {
   await requireAdmin();

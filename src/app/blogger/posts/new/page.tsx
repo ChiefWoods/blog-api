@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
+
 import { BackToDashboardLink } from "@/components/back-to-dashboard-link";
 import { NewPostForm } from "@/components/posts/new-post-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Create Post",
+};
 
 export default async function NewPostPage() {
   await requireAdmin();
