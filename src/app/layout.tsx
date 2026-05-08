@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { Geist, Geist_Mono, Merriweather } from "next/font/google";
 
 import "./globals.css";
@@ -21,6 +23,27 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 });
+
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      {
+        url: "/favicon-light.svg",
+        type: "image/svg+xml",
+      },
+      {
+        url: "/favicon-light.svg",
+        media: "(prefers-color-scheme: light)",
+        type: "image/svg+xml",
+      },
+      {
+        url: "/favicon-dark.svg",
+        media: "(prefers-color-scheme: dark)",
+        type: "image/svg+xml",
+      },
+    ],
+  },
+};
 
 export default function RootLayout({
   children,
