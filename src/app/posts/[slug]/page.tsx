@@ -42,7 +42,7 @@ export default async function PostPage({ params }: PostPageProps) {
     post.updatedAt.getTime() === publicationDate.getTime() ? "Published" : "Updated";
 
   return (
-    <div className="w-full bg-muted/35 px-4 py-10 sm:px-6 sm:py-14">
+    <div className="flex w-full flex-col gap-2 bg-muted/35 px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto w-full max-w-2xl">
         <BackToPostsLink />
       </div>
