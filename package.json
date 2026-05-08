@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start -p 4000",
+    "start": "next start",
     "test:unit": "vitest run --project unit",
     "test:dom": "vitest run --project dom",
     "test:e2e": "playwright test",
